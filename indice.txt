@@ -1,0 +1,14 @@
+## Ejercicio 1 TEMAS: Usuarios, particiones
+## Ejercicio 2 TEMAS: Usuarios
+## Ejercicio 3 TEMAS: Usuarios, instalacion de sw
+## Ejercicio 4 TEMAS: Usuarios, backups, scripts, system units
+## Ejercicio 5 TEMAS: Usuarios, particiones
+## Ejercicio 1 TEMAS: scripts, system units, comandos "hack"
+## Ejercicio 3 TEMAS: arranque, particiones
+## Ejercicio 5 TEMAS: instalación de sw
+## Ejercicio 1 TEMAS: arranque
+## Ejercicio 2 TEMAS: redes, script, system units
+## Ejercicio 3 TEMAS: system units, comandos "hack"
+## Ejercicio 1 TEMAS: scripts
+## Ejercicio 1 TEMAS: particiones, system units
+## Ejercicio 3 TEMAS: servicio que falla

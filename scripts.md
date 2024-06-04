@@ -2,7 +2,7 @@ SCRIPTS Y EXAMENES PASADOS
 
 # Ordinaria 2023
 
-## Ejercicio 1
+## Ejercicio 1 TEMAS: Usuarios, particiones
 La política de reparto de recursos en tu empresa impone los siguiente 
 condicionantes: 
 - El directorio $HOME de los usuarios no debe alojarse en el mismo disco que el sistema de ficheros raíz. 
@@ -59,7 +59,7 @@ sudo mount /home/user2
 ```
 Ahora si hicimos todo bien, al reiniciar deberia estar correcto.
 
-## Ejercicio 2
+## Ejercicio 2 TEMAS: Usuarios
 Un usuario no puede acceder a su directorio de trabajo, solucionalo. 
 Debemos encontrar el fallo. Posibilidades:
 ### 1. Permisos de Directorio
@@ -219,7 +219,7 @@ sudo passwd -u user2
    sudo mount -a
    ```
 
-## Ejercicio 3
+## Ejercicio 3 TEMAS: Usuarios, instalacion de sw
 Si el usuario `user3` tiene permisos sudo para instalar paquetes pero está experimentando problemas para hacerlo, hay varias posibilidades que podrían estar causando este problema. Aquí hay algunos pasos que podemos seguir para resolverlo:
 
 ### 1. Verificar los permisos sudo de user3
@@ -301,7 +301,7 @@ ps aux | grep apt
 
 Si recibes algún mensaje de error específico durante el intento de instalación de paquetes, busca en línea para encontrar posibles soluciones basadas en ese mensaje de error específico.
 
-## Ejercicio 4
+## Ejercicio 4 TEMAS: Usuarios, backups, scripts, system units
  El usuario user4 ha borrado de forma accidental un fichero de nombre critical.txt. Recupera dicho documento a través de los ficheros de backup (ficheros con extensión .dump). A través de systemd implementa una política de backup para el sistema de ficheros en el que se ubica el directorio $HOME del usuario en la que todos los días se realice un backup de nivel 1 a las 12:00 de la noche (excepto fines de semana), cuyo nombre tenga el formato [AÑO]-[MES]-[DÍA]_l1.dump. Dicho backup se almacena en la carpeta donde se encuentran los backups previos. 
 
 El archivo perido estará en algún lugar donde se guarden los .dump.
@@ -359,7 +359,7 @@ sudo systemctl enable backup_timer.timer
 sudo systemctl start backup_timer.timer
 ```
 
-## Ejercicio 5
+## Ejercicio 5 TEMAS: Usuarios, particiones
 La política de gestión de usuarios de tu empresa ha cambiado, imponiendo ahora los siguiente condicionantes: 
 - Todos los directorios de trabajo de los usuarios se ubicarán en un volumen lógico que se extiende a todos los discos disponibles (excepto el disco donde reside el sistema de ficheros raíz). Particiona dichos discos si fuera necesario. 
 - El reparto de recursos se hace a través de cuotas, en las que el usuario2 dispone del 50% del espacio de almacenamiento y el resto de usuario se reparten el restante de manera lo más equitativa posible. Implementa la política descrita en tu máquina, haciendo las modificaciones pertinentes para que los usuarios cumplan los requisitos. No puedes emplear discos adicionales, trabaja con lo que tienes. 
@@ -445,7 +445,7 @@ Con estos pasos, has implementado la nueva política de gestión de usuarios en 
 
 # Ordinaria 21-22
 
-## Ejercicio 1
+## Ejercicio 1 TEMAS: scripts, system units, comandos "hack"
 Arranca la máquina desde el snapshot Ej1Begin. En dicha máquina comprobarás que hay un usuario de nombre “hacker” que tiene permisos completos a través de sudo. Queremos que sea un usuario “oculto” para el administrador, y como primer paso vamos a “crear” algunos comandos a medida. Crea un Shell script de nombre cat que realice las mismas tareas que el comando original (asumimos que recibe un fichero como único parámetro), con la única excepción de que las líneas que contienen el string “hack” no se imprimen por pantalla (así no se detectará su presencia en ficheros como /etc/passwd, /etc/shadow, etc.). Una vez finalizado, lleva a cabo las acciones necesarias para que el usuario root utilice tu script siempre que tenga intención de ejecutar el comando cat. El resto de usuario usarán el comando cat original del sistema. 
 
 Primero crearemos el script llamado **cat**.
@@ -613,7 +613,7 @@ Y ahora escribiriamos los pasos realizados en el readme:
 ```
 
 
-## Ejercicio 3
+## Ejercicio 3 TEMAS: arranque, particiones
  Arranca la máquina desde el snapshot Ej3Begin. Estás trabajando con un sistema Debian que dispone de un disco adicional en el que se ha creado una partición e instalado el sistema de ficheros raíz de una distribución alternativa de Linux (Lubuntu). Para gestionar el uso de ambos sistemas, lleva a cabo las siguientes tareas: 
 1. Crea una nueva entrada en el BootLoader del sistema Debian que te permita arrancar la distribución Lubuntu. Limita el contenido de dicha entrada a los elementos estrictamente necesarios (kernel, ramdisk y sistema de ficheros raíz). La nueva entrada será la que arranque por defecto de forma permanente. 
 2. Hemos extraviado el password de root del sistema Lubuntu. Lleva a cabo las tareas necesarias para que dicho password sea el mismo que el de la distribución ebian. 
@@ -708,3 +708,601 @@ Unificar los directorios de trabajo
     ```
 
 Con estos pasos, habrás unificado los directorios de trabajo de los usuarios en ambos sistemas.
+
+## Ejercicio 4
+
+### Paso 1: Particionar los discos
+
+1. **Identificar los discos**:
+    Utiliza `lsblk` o `fdisk -l` para identificar los discos disponibles. Supongamos que los discos son `/dev/sdb`, `/dev/sdc`, y `/dev/sdd`.
+
+2. **Particionar los discos**:
+    Para cada disco, crea una única partición que ocupe el 100% del disco.
+
+    ```bash
+    sudo fdisk /dev/sdb
+    # Comandos dentro de fdisk:
+    # n -> nueva partición
+    # p -> partición primaria
+    # 1 -> número de partición
+    # enter -> usar el valor por defecto para el primer sector
+    # enter -> usar el valor por defecto para el último sector
+    # w -> escribir los cambios
+
+    sudo fdisk /dev/sdc
+    sudo fdisk /dev/sdd
+    ```
+
+### Paso 2: Crear el RAID
+
+1. **Instalar mdadm si no está instalado**:
+    ```bash
+    sudo apt-get install mdadm
+    ```
+
+2. **Crear el RAID 5**:
+    ```bash
+    sudo mdadm --create --verbose /dev/md0 --level=5 --raid-devices=3 /dev/sdb1 /dev/sdc1 /dev/sdd1
+    ```
+
+3. **Verificar el estado del RAID**:
+    ```bash
+    cat /proc/mdstat
+    ```
+
+### Paso 3: Crear el sistema de archivos
+
+1. **Crear el sistema de archivos en el dispositivo RAID**:
+    ```bash
+    sudo mkfs.ext4 /dev/md0
+    ```
+
+### Paso 4: Montar el RAID y mover /home
+
+1. **Crear el punto de montaje**:
+    ```bash
+    sudo mkdir /mnt/raid_home
+    ```
+
+2. **Montar el dispositivo RAID**:
+    ```bash
+    sudo mount /dev/md0 /mnt/raid_home
+    ```
+
+3. **Copiar el contenido de /home al RAID**:
+    ```bash
+    sudo rsync -av /home/ /mnt/raid_home/
+    ```
+
+4. **Montar el RAID como /home permanentemente**:
+    Edita el archivo `/etc/fstab`:
+    ```bash
+    sudo nano /etc/fstab
+    ```
+
+    Agrega la siguiente línea:
+    ```bash
+    /dev/md0    /home   ext4    defaults    0   2
+    ```
+
+5. **Montar el sistema de archivos**:
+    ```bash
+    sudo umount /home
+    sudo mount -a
+    ```
+
+### Paso 5: Activar y configurar cuotas de disco
+
+1. **Instalar cuotas si no están instaladas**:
+    ```bash
+    sudo apt-get install quota
+    ```
+
+2. **Activar cuotas en el archivo /etc/fstab**:
+    Edita el archivo `/etc/fstab` y modifica la línea para `/home`:
+    ```bash
+    /dev/md0    /home   ext4    defaults,usrquota,grpquota    0   2
+    ```
+
+3. **Remontar el sistema de archivos**:
+    ```bash
+    sudo mount -o remount /home
+    ```
+
+4. **Crear archivos de cuotas**:
+    ```bash
+    sudo quotacheck -cum /home
+    sudo quotaon /home
+    ```
+
+5. **Establecer cuotas para usuarios**:
+    ```bash
+    sudo edquota -u ltorvalds
+    sudo edquota -u rstallman
+    ```
+
+    En el editor que se abre, establece los límites de espacio a 100MB y el número máximo de archivos a 100.
+
+### Paso 6: Comprobación
+
+1. **Verificar que las cuotas están activas**:
+    ```bash
+    sudo repquota -a
+    ```
+
+2. **Comprobar que los usuarios tienen los límites establecidos**:
+    Inicia sesión como `ltorvalds` y `rstallman` e intenta crear archivos hasta alcanzar los límites establecidos.
+
+Con estos pasos, habrás configurado un RAID 5, movido el directorio `/home` al RAID, activado las cuotas de disco, y establecido límites para los usuarios `ltorvalds` y `rstall
+
+
+## Ejercicio 5 TEMAS: instalación de sw
+
+### Lleva a cabo las reparaciones necesarias para instalar, mediante el comando apt, el paquete pacman4console
+
+La instalación de un paquete mediante `apt` podría fallar por varios motivos. Aquí tienes una lista de posibles problemas y sus soluciones para el paquete `pacman4console`:
+
+1. **Paquete no disponible en los repositorios configurados**:
+   - **Motivo**: El paquete `pacman4console` puede no estar presente en los repositorios configurados en tu sistema.
+   - **Solución**: Verifica que tienes los repositorios correctos configurados en `/etc/apt/sources.list` y en los archivos dentro de `/etc/apt/sources.list.d/`.
+   - **Comandos**:
+     ```bash
+     sudo apt update
+     sudo apt search pacman4console
+     ```
+
+   Si el paquete no aparece, agrega repositorios adicionales que puedan contener el paquete. Por ejemplo, puedes agregar un repositorio de Debian Universe si no está habilitado:
+   ```bash
+   sudo add-apt-repository universe
+   sudo apt update
+   ```
+
+2. **Sistema no actualizado**:
+   - **Motivo**: Puede haber dependencias rotas o desactualizadas en tu sistema.
+   - **Solución**: Actualiza la lista de paquetes y el sistema.
+   - **Comandos**:
+     ```bash
+     sudo apt update
+     sudo apt upgrade
+     ```
+
+3. **Dependencias faltantes**:
+   - **Motivo**: El paquete puede depender de otros paquetes que no están instalados.
+   - **Solución**: Usa `apt` para instalar las dependencias automáticamente.
+   - **Comandos**:
+     ```bash
+     sudo apt install -f
+     ```
+
+4. **Errores de red**:
+   - **Motivo**: Problemas con la conexión a Internet o los servidores de los repositorios.
+   - **Solución**: Verifica tu conexión a Internet y asegúrate de que los servidores de los repositorios estén accesibles.
+   - **Comandos**:
+     ```bash
+     ping google.com
+     sudo apt update
+     ```
+
+5. **Paquetes retenidos o bloqueados**:
+   - **Motivo**: Algunos paquetes podrían estar bloqueados y no permitirse su actualización o instalación.
+   - **Solución**: Verifica y desbloquea cualquier paquete retenido.
+   - **Comandos**:
+     ```bash
+     sudo apt-mark showhold
+     sudo apt-mark unhold <package>
+     ```
+
+6. **Espacio en disco insuficiente**:
+   - **Motivo**: El sistema puede no tener suficiente espacio en disco para descargar o instalar los paquetes.
+   - **Solución**: Verifica el espacio disponible en disco y libera espacio si es necesario.
+   - **Comandos**:
+     ```bash
+     df -h
+     sudo apt clean
+     sudo apt autoremove
+     ```
+
+### Solución Propuesta
+
+Sigue estos pasos para solucionar posibles problemas y luego intenta instalar el paquete `pacman4console` nuevamente:
+
+1. **Actualizar el sistema y los repositorios**:
+   ```bash
+   sudo apt update
+   sudo apt upgrade
+   ```
+
+2. **Buscar el paquete en los repositorios disponibles**:
+   ```bash
+   sudo apt search pacman4console
+   ```
+
+3. **Agregar repositorios adicionales si es necesario**:
+   ```bash
+   sudo add-apt-repository universe
+   sudo apt update
+   ```
+
+4. **Instalar el paquete**:
+   ```bash
+   sudo apt install pacman4console
+   ```
+
+5. **Resolver dependencias faltantes**:
+   ```bash
+   sudo apt install -f
+   ```
+
+6. **Verificar y liberar espacio en disco**:
+   ```bash
+   df -h
+   sudo apt clean
+   sudo apt autoremove
+   ```
+
+Si después de seguir estos pasos aún no puedes instalar el paquete, considera buscar más información específica sobre `pacman4console` en la documentación de tu distribución o en foros en línea.
+
+# Extraordinaria 21-22
+
+## Ejercicio 1 TEMAS: arranque
+Lleva a cabo las acciones necesarias para que nuestro sistema arranque el kernel directamente, sin hacer uso de ningún Bootloader. 
+
+Para arrancar el kernel directamente sin hacer uso de ningún bootloader en un sistema Linux, podemos hacerlo utilizando las herramientas proporcionadas por el propio sistema operativo. Aquí tienes los pasos para hacerlo:
+
+1. **Identificar la Partición Raíz**:
+   - Identifica la partición raíz donde está instalado el kernel. Puedes usar el comando `lsblk` para listar las particiones y sus montajes.
+
+2. **Montar la Partición Raíz**:
+   - Monta la partición raíz en un directorio temporal. Por ejemplo, si la partición raíz es `/dev/sda1`, puedes montarla en `/mnt` con el siguiente comando:
+     ```
+     sudo mount /dev/sda1 /mnt
+     ```
+
+3. **Configurar el Arranque Directo**:
+   - Una vez que la partición raíz esté montada, necesitamos modificar el archivo de configuración del cargador de arranque (generalmente GRUB) para que cargue el kernel directamente. El archivo de configuración suele estar en `/boot/grub/grub.cfg`. Abre este archivo en un editor de texto. Por ejemplo:
+     ```
+     sudo nano /mnt/boot/grub/grub.cfg
+     ```
+
+4. **Modificar el Archivo de Configuración**:
+   - Dentro del archivo `grub.cfg`, busca la sección que define las entradas de arranque. Debes buscar las líneas que empiezan con `menuentry`. Cada una de estas líneas representa una entrada de arranque. Busca la línea correspondiente al kernel que deseas arrancar directamente.
+
+5. **Editar la Entrada de Arranque**:
+   - Edita la línea correspondiente al kernel que deseas arrancar directamente. Debes eliminar las opciones relacionadas con el cargador de arranque, como `set root`, `linux`, `initrd`, etc., y dejar solo las opciones relacionadas con el kernel. Por ejemplo:
+     ```
+     linux /vmlinuz-5.4.0-88-generic root=/dev/sda1 ro quiet splash
+     ```
+
+6. **Guardar y Salir**:
+   - Guarda los cambios en el archivo y sal de tu editor de texto.
+
+7. **Desmontar la Partición Raíz**:
+   - Desmonta la partición raíz del directorio temporal:
+     ```
+     sudo umount /mnt
+     ```
+
+8. **Reiniciar el Sistema**:
+   - Reinicia el sistema para que los cambios surtan efecto. El sistema debería arrancar directamente desde el kernel sin mostrar el menú de GRUB.
+
+## Ejercicio 2 TEMAS: redes, script, system units
+Arranca la máquina desde el snapshot Ej2Begin. En el directorio $HOME del usuario root crea un script de nombre checkdhcp.sh. Su función será comprobar si los servicios de red han funcionado correctamente y el equipo tiene una dirección IP asignada en el interfaz enp0s3 bajo configuración automática (dhcp). En caso de no tener IP definida, aplicará una configuración manual a dicho interfaz con los siguientes parámetros: dirección=10.0.2.15 máscara de red=255.255.255.0, broadcast=10.0.2.255, Gateway=10.0.2.2. A través de un timer de systemd de nombre dchp_check.timer, haz que tu script se ejecute cada hora durante la jornada laboral (entre las 8:00 y las 17:00, de lunes a viernes). 
+
+Para completar este ejercicio, primero necesitamos crear el script `checkdhcp.sh` en el directorio `$HOME` del usuario `root`, y luego configurar un timer de systemd para que este script se ejecute cada hora durante la jornada laboral de lunes a viernes.
+
+Aquí están los pasos para lograrlo:
+
+1. **Crear el script checkdhcp.sh**:
+   - Primero, accede al directorio `$HOME` del usuario `root`:
+     ```bash
+     cd /root
+     ```
+   - Luego, crea y edita el script `checkdhcp.sh` con tu editor de texto preferido. Por ejemplo:
+     ```bash
+     nano checkdhcp.sh
+     ```
+   - Agrega el siguiente contenido al script:
+     ```bash
+     #!/bin/bash
+     
+     # Comprobar si la interfaz enp0s3 tiene una IP asignada mediante DHCP
+     if [[ $(ip addr show enp0s3 | grep -c "inet ") -eq 0 ]]; then
+         # Si no tiene IP, aplicar configuración manual
+         ip addr add 10.0.2.15/24 broadcast 10.0.2.255 dev enp0s3
+         ip route add default via 10.0.2.2
+     fi
+     ```
+   - Guarda y cierra el archivo (`Ctrl + O`, `Enter`, `Ctrl + X` en nano).
+
+2. **Dar permisos de ejecución al script**:
+   - Para asegurarnos de que el script sea ejecutable, utilizamos el comando `chmod`:
+     ```bash
+     chmod +x checkdhcp.sh
+     ```
+
+3. **Configurar el timer de systemd**:
+   - Crearemos un archivo de unidad para el timer de systemd. Por ejemplo:
+     ```bash
+     sudo nano /etc/systemd/system/dhcp_check.timer
+     ```
+   - Agrega el siguiente contenido:
+     ```plaintext
+     [Unit]
+     Description=Timer for running checkdhcp.sh every hour during working hours
+
+     [Timer]
+     OnCalendar=Mon-Fri 08:00:00
+     Persistent=true
+
+     [Install]
+     WantedBy=timers.target
+     ```
+   - Guarda y cierra el archivo (`Ctrl + O`, `Enter`, `Ctrl + X` en nano).
+
+4. **Enlazar el timer con el servicio**:
+   - Ahora, creamos un archivo de unidad para el servicio asociado al timer:
+     ```bash
+     sudo nano /etc/systemd/system/dhcp_check.service
+     ```
+   - Agrega el siguiente contenido:
+     ```plaintext
+     [Unit]
+     Description=Script to check and configure DHCP on enp0s3 interface
+
+     [Service]
+     Type=oneshot
+     ExecStart=/root/checkdhcp.sh
+     ```
+   - Guarda y cierra el archivo (`Ctrl + O`, `Enter`, `Ctrl + X` en nano).
+
+5. **Recargar systemd y habilitar el timer**:
+   - Después de crear los archivos de unidad, recargamos systemd para que reconozca los cambios:
+     ```bash
+     sudo systemctl daemon-reload
+     ```
+   - Luego, habilitamos el timer para que se ejecute automáticamente:
+     ```bash
+     sudo systemctl enable --now dhcp_check.timer
+     ```
+
+Con estos pasos, hemos creado un script `checkdhcp.sh` que verifica si la interfaz `enp0s3` tiene una dirección IP asignada mediante DHCP, y si no la tiene, aplica una configuración manual. Además, hemos configurado un timer de systemd para que este script se ejecute cada hora durante la jornada laboral de lunes a viernes.
+
+## Ejercicio 3 TEMAS: system units, comandos "hack"
+Ejercicio 4 (2p) Arranca la máquina desde el snapshot Ej4Begin. Como administrador, tienes un control prácticamente absoluto sobre lo que otros usuarios hacen. Para demostrarlo con un ejemplo práctico, en este ejercicio vas a instalar un capturador de teclado (keylogger) para espiar” lo que escriben el resto de usuarios. Instala el keylogger del siguiente enlace: `https://github.com/kernc/logkeys`, y crea un servicio, de nomber keyl.service, que active dicho keylogger en arranque y lo desactive al apagar la máquina. Como lo que estás haciendo no es muy legal, crea un target de arranque alternativo (multi-user-cotilla.target) que funcione exactamente igual que multi-user.target, con la única diferencia que tu servicio solo se activará con tu target “cotilla”. Cambia el target de arranque por defecto al que has creado y comprueba que todo funciona correctamente tecleando algún comando como usuario jalberto (password jalberto) desde un segundo terminal. 
+
+Aquí tienes los pasos para completar el ejercicio:
+
+1. **Descarga e Instalación de Logkeys**:
+   - Descarga el código fuente de Logkeys desde el enlace proporcionado:
+     ```bash
+     wget https://github.com/kernc/logkeys/archive/master.zip
+     ```
+   - Descomprime el archivo descargado:
+     ```bash
+     unzip master.zip
+     ```
+   - Accede al directorio recién descomprimido:
+     ```bash
+     cd logkeys-master
+     ```
+   - Instala las dependencias necesarias:
+     ```bash
+     sudo apt install build-essential automake autoconf libtool
+     ```
+   - Compila e instala Logkeys:
+     ```bash
+     autoreconf --force --install
+     ./configure
+     make
+     sudo make install
+     ```
+
+2. **Creación del Servicio keyl.service**:
+   - Crea y edita el archivo de servicio keyl.service:
+     ```bash
+     sudo nano /etc/systemd/system/keyl.service
+     ```
+   - Agrega el siguiente contenido al archivo:
+     ```plaintext
+     [Unit]
+     Description=Keylogger Service
+     After=multi-user.target
+
+     [Service]
+     Type=simple
+     ExecStart=/usr/local/bin/logkeys --start --output /var/log/keystrokes.log
+     ExecStop=/usr/local/bin/logkeys --kill
+
+     [Install]
+     WantedBy=multi-user-cotilla.target
+     ```
+   - Guarda y cierra el archivo.
+
+3. **Creación del Target multi-user-cotilla.target**:
+   - Copia el archivo de unidad `multi-user.target` a uno nuevo llamado `multi-user-cotilla.target`:
+     ```bash
+     sudo cp /lib/systemd/system/multi-user.target /etc/systemd/system/multi-user-cotilla.target
+     ```
+   - Edita el archivo `multi-user-cotilla.target`:
+     ```bash
+     sudo nano /etc/systemd/system/multi-user-cotilla.target
+     ```
+   - Cambia `WantedBy` para que apunte al nuevo servicio:
+     ```plaintext
+     [Install]
+     WantedBy=multi-user-cotilla.target
+     ```
+   - Guarda y cierra el archivo.
+
+4. **Cambiar el Target de Arranque por Defecto**:
+   - Cambia el enlace simbólico `default.target` para que apunte al nuevo target `multi-user-cotilla.target`:
+     ```bash
+     sudo ln -sf /etc/systemd/system/multi-user-cotilla.target /etc/systemd/system/default.target
+     ```
+
+5. **Habilitar y Comprobar el Servicio**:
+   - Habilita el servicio keyl.service para que se inicie automáticamente al arrancar:
+     ```bash
+     sudo systemctl enable keyl.service
+     ```
+   - Comprueba el estado del servicio para asegurarte de que esté activo:
+     ```bash
+     sudo systemctl status keyl.service
+     ```
+
+Una vez completados estos pasos, el keylogger se activará al arrancar la máquina y se desactivará al apagarla, pero solo cuando el sistema se inicie con el target `multi-user-cotilla.target`. Es importante tener en cuenta las implicaciones éticas y legales de monitorear las acciones de otros usuarios sin su consentimiento.
+
+# Ordinaria 20-21
+
+## Ejercicio 1 TEMAS: scripts
+Arranca la máquina desde el snapshot Ej1Begin. Deberás crear un script de nombre “ejercicio1.sh” para automatizar la gestión de diferentes usuarios. Dicho script realizará las siguientes funciones: 
+
+1. El script recibirá por línea de comandos dos parámetros. Primero el id del usuario, segundo un comando (por ejemplo: ./ejercicio1.sh pepe tmux). Si el usuario no existe en el sistema retornará un mensaje de error. 
+
+2. El objetivo principal del script será determinar si dicho usuario está ejecutando el comando que se ha pasado como argumento. En caso afirmativo, se procederá a matar de manera inmediata el proceso asociado a dicho comando y se escribirá un mensaje con información sobre dicho evento (usuario, comando, fecha) en el fichero /var/log/cmdprohibido.log.   
+
+3. Crea una tarea programada con cron que ejecute dicho script cada 5 minutos. El usuario a controlar será test y el comando prohibido será stress. Para controlar el tamaño asociado al fichero de log creado, configura un proceso de rotación semanal, limitando los mensajes almacenados a los generados durante el último mes. 
+Puedes probar el funcionamiento de tu script con el usuario test y el comando stress. 
+
+Primero crearemos una versión sencilla del script
+
+```sh
+#!/bin/bash
+
+#Recibimos dos parametros
+# $1 = id usuario
+# $2 = comando
+
+if id "$1" >/dev/null 2>&1; then 
+   USERID=$1
+else 
+   echo "user does not exist" 
+   #return null
+fi
+#mirar si estamos corriendo el comando
+COMMAND=$2
+# -n "not null"
+
+#pgrep is a command-line utility in Unix that searches the running processes on a system based on their names and other attributes. It returns the process IDs that match the criteria.
+PD=$(pgrep -u $USERID $COMMAND)
+if [-n "$PID"]; then
+   kill $PID
+   echo "User: $USERID, Command: $COMMAND, Date: $(date)" >> /var/log/cmdprohibido.log
+fi
+```
+Comando pgrep [pregp](https://linuxize.com/post/pgrep-command-in-linux/)
+Comando cron [cron crontab](https://www.redeszone.net/tutoriales/servidores/cron-crontab-linux-programar-tareas/#447735-que-es-cron)
+
+```
+crontab -e  # entramos a la configuracion de crontab para anhadir la linea
+
+*/5 * * * * /path/to/ejercicio1.sh test stress
+```
+
+Para lo del log tenemos que crear un fichero em `/etc/logrotate.d/` con el contenido:
+```sh
+/var/log/cmdprohibido.log {
+    weekly
+    rotate 4
+}
+```
+
+## Extraordinaria 20-21
+## Ejercicio 1 TEMAS: particiones, system units
+Arranca la máquina desde el snapshot Ej1Begin. Utiliza los tres discos disponibles (sdb, sdc, sdd), de 500MB cada uno, para crear un volumen de grupo que albergará dos volúmenes lógicos. El primer volumen lógico, de 1GB de tamaño, albergará un sistema de ficheros que sustituirá al directorio /home actual (montado permanente, el contenido previo de /home debe estar presente en el nuevo punto de montaje). En el segundo volumen lógico, que utilizará la capacidad restante y se monta de manera permanente en /swap, albergará un fichero de swap de 250MB que debes crear y habilitar a través de systemd.
+
+1. Crearemos un grupo de volumenes fisicos con los tres discos disponibles.
+```sh
+pvcreate /dev/sdb /dev/sdc /dev/sdd
+```
+
+2. Ahora crearemos un grupo de volúmenes con los volúmenes físicos que hemos creado.
+```sh
+vgcreate myvg /dev/sdb /dev/sdc /dev/sdd
+```
+
+3. Ahora creamos los volumenes logicos, el primero de 1 GB y el segundo de lo que quede.
+```sh
+lvcreate -L 1G -n home myvg
+lvcreate -l 100%FREE -n swap myvg
+```
+
+4. Creamos sistemas de archivos en los volúmenes lógicos
+```sh
+mkfs.ext4 /dev/myvg/home
+mkswap /dev/myvg/swap
+```
+5. Movemos el contenido de /home a un directorio temporal para no perderlo. Montamos el nuevo volumen logico en Home y lo traemos de vuelta (el contenido).
+```sh
+mv /home /home_old
+mkdir /home
+mount /dev/myvg/home /home
+mv /home_old/* /home/
+```
+6. Creamos un archivo de swap en el segundo volumen lógico y habilitamos el swap.
+```sh
+dd if=/dev/zero of=/swap/swapfile bs=1M count=250
+chmod 600 /swap/swapfile
+mkswap /swap/swapfile
+swapon /swap/swapfile
+```
+
+7. Para hacer los cambios permanentes hay que escribir en `/etc/fstab`. Añadimos en este fichero las líneas:
+```sh
+/dev/myvg/home /home ext4 defaults 0 0
+/swap/swapfile swap swap defaults 0 0
+```
+
+8. Finalmente, para habilitar el swap a través de systemd, crea un archivo de servicio systemd en /etc/systemd/system/swapfile.service con el siguiente contenido:
+```sh
+[Unit]
+Description=Turn on swap
+
+[Service]
+Type=oneshot
+ExecStart=/sbin/swapon /swap/swapfile
+
+[Install]
+WantedBy=multi-user.target
+```
+Y lo habilitamos con `systemctl enable swapfile.service`.
+
+## Ejercicio 3 TEMAS: servicio que falla
+Arranca la máquina desde el snapshot Ej3Begin. Comprobarás que el servicio ssh.service ha sufrido algún tipo de problema durante el proceso de arranque. Busca el origen del problema y lleva a cabo los cambios necesarios para corregirlo. 
+
+Aquí están los pasos que puedes seguir para solucionar el problema con el servicio ssh:
+
+Comprueba el estado del servicio ssh con el siguiente comando:
+```sh
+systemctl status ssh.service
+```
+Esto te dará información sobre el estado actual del servicio y cualquier error que pueda haber ocurrido durante el arranque.
+
+Si el servicio no está activo, intenta iniciarlo manualmente con el siguiente comando:
+```sh
+systemctl start ssh.service
+```
+
+Si hay algún problema con el servicio, este comando debería darte un error que te ayudará a identificar el problema.
+
+Revisa los logs del sistema para obtener más información sobre el problema. Puedes hacer esto con el siguiente comando:
+```sh
+journalctl -u ssh.service
+```
+Esto te mostrará los logs del servicio ssh, que pueden contener información útil sobre el problema.
+
+Una vez que hayas identificado el problema, puedes hacer los cambios necesarios para corregirlo. Esto puede implicar editar la configuración de ssh, cambiar los permisos de los archivos clave, o reinstalar el servicio ssh.
+
+Después de hacer los cambios, reinicia el servicio ssh con el siguiente comando:
+```sh
+systemctl restart ssh.service
+```
+
+Esto debería iniciar el servicio ssh con tu nueva configuración.
+
+Finalmente, comprueba de nuevo el estado del servicio ssh para asegurarte de que se está ejecutando correctamente:
+```sh
+systemctl status ssh.service
+```
+Si el servicio está activo y no hay errores en los logs, entonces has solucionado el problema con éxito.
+
