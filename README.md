@@ -1,3 +1,4 @@
+![portada](cabecera.png)
 # Índice
 
 - [Tema 1: Advanced Shell](#tema-1-advanced-shell)
