@@ -1,19 +1,3 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Documento Markdown con Imagen de Cabecera</title>
-    <style>
-        img {
-            width: 100%;
-            height: auto;
-        }
-    </style>
-</head>
-<body>
-
-<!-- Cabecera con imagen -->
-<img src="C:\Users\banne\Desktop\UNIVERSIDAD\4 CUARTO\SEGUNDO CUATRI CUAR\Sistemas informaticos\cabecera.png" alt="Texto Alternativo"/>
-
 # Índice
 
 - [Tema 1: Advanced Shell](#tema-1-advanced-shell)
