@@ -410,5 +410,3 @@ En teoría hemos visto dos mecanismos, Affinity e Isolation, para "manipular" el
 En resumen, estos componentes trabajan juntos para proporcionar un sistema robusto de logging y análisis en Linux, facilitando la administración y el diagnóstico del sistema y sus servicios.
 
 ---
-
-Espero que esto te sea útil para tu documento.
