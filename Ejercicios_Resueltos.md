@@ -2345,3 +2345,6 @@ Algunas distribuciones modernas utilizan systemd, en lugar de GRUB, para gestion
 - Es crucial tener cuidado al editar archivos de configuración del sistema como `grub.cfg` o `/etc/default/grub`. Modificar estos archivos de manera incorrecta puede hacer que tu sistema no arranque correctamente.
 - Siempre realiza una copia de seguridad del archivo de configuración antes de editar para poder revertir los cambios si algo sale mal.
 - Los comandos y ubicaciones de archivos pueden variar según la distribución de Linux que estés utilizando. Asegúrate de adaptar estos pasos según sea necesario.
+
+### Personalizar grub
+[Personalizar grub][https://es.linux-console.net/?p=16580]
