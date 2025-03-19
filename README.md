@@ -20,12 +20,12 @@ Fundamentos de la shell, manipulación de strings, variables de entorno y shell 
 
 ## Practica 1
 
-- **Ejercicio 1**
+- **<span style="color:red">Ejercicio 1</span>**
     Utilizar el manual (comando man)
     En este ejercicio nos piden que utilicemos funciones basicas del comando **man**, buscar palabras, movernos, ir a una línea concreta...
     [Utilización del comando man](https://www.man7.org/linux/man-pages/man1/man.1.html)
 
-- **Ejercicio 2**
+- **<span style="color:red">Ejercicio 2</span>**
     En este ejercicio nos piden utilizar una serie de comandos básicos para gestionar archivos, permisos...
 
     1. Crear un directorio llamado "SI" dentro del directorio de usuario y obtener su ruta absoluta:
@@ -96,11 +96,11 @@ Fundamentos de la shell, manipulación de strings, variables de entorno y shell 
     ```bash
     last
     ```
-- **Ejercicio 3**
+- **<span style="color:red">Ejercicio 3</span>**
     En este ejercicio nos piden hacer distintas tareas usando el editor de texto "vim". Este es bastante útil para hacer muchas cosas de forma muy rápida, sin embargo es bastante complejo. Nano es más sencillo de usar para cuestiones más triviales. De todos modos adjunto a continuación una página que explica mejor el uso de vim por si fuera necesario.
     [*Ayuda Vim*](https://vim.dantecalderon.com/lang/es_es/)
 
-- **Ejercicio 4**
+- **<span style="color:red">Ejercicio 4</span>**
     De nuevo, tareas básicas de la shell.
 
     1. Comprimir el directorio /var en un archivo .tar.gz y colocarlo en tu $HOME. Luego, verificar la correcta compresión descomprimiéndolo en /tmp:
@@ -129,7 +129,7 @@ Fundamentos de la shell, manipulación de strings, variables de entorno y shell 
     sudo tail -n 30 /var/log/syslog
     ```
 
-- **Ejercicio 5**
+- **<span style="color:red">Ejercicio 5</span>**
     Uso de comandos más avanzados (awk, sed, sort)
 
     1. Listar el contenido del directorio /etc en formato extendido y redirigir la salida a un archivo llamado contetc.txt:
@@ -186,12 +186,12 @@ Fundamentos de la shell, manipulación de strings, variables de entorno y shell 
         ```
         sed -i 's/^<\/listing>/---end listing/g' archivo.txt
         ```
-- **Ejercicio 6**
+- **<span style="color:red">Ejercicio 6</span>**
     En este ejercicio se nos pide hacer uso del comando **grep** para buscar cadenas de texto en un archivo. Grep utiliza expresiones regulares para buscar coincidencias en los textos. Es importante recordad como se escriben las expresiones regulares. A continuación un par de páginas de referencia:
     [*sintaxis de las expresiones regulares*](https://developer.mozilla.org/es/docs/Web/JavaScript/Guide/Regular_Expressions/Cheatsheet)
     [*testear expresiones regulares*](https://regex101.com/)
 
-- **Ejercicio 7**
+- **<span style="color:red">Ejercicio 7</span>**
     Shell Scripting
     Escribir una serie de scripts que realicen distintas operaciones.
 
@@ -343,10 +343,10 @@ La cabecera del LUKS está formada por:
 
 ## Practica 2
 
-**Ejercicio 1**
+**<span style="color:red">Ejercicio 1</span>**
 Añadir un disco duro virtual a la maquina de capacidad = 1 Gb
 
-**Ejercicio 2**
+**<span style="color:red">Ejercicio 2</span>**
 
 Encuentra qué número de inodo corresponde al directorio raíz (/) y qué número de bloque almacena su contenido. Vuelca el contenido del bloque para examinarlo. Comprueba si el inodo correspondiente al directorio /etc coincide con la información obtenida con los comandos ls o stat.
 
@@ -450,7 +450,7 @@ En estas lineas deberíamos poder encontrar (desplazado, el numero de inodo del 
 El número "3FC01" aparece así porque esto se guarda en **little endian**.
 
 
-**Ejercicio 3**
+**<span style="color:red">Ejercicio 3</span>**
 
 En tu directorio **$HOME**, crea un archivo de texto (`personal-info.txt`) y escribe tu información personal (nombre, número de teléfono y correo electrónico). Encuentra y anota el número de inodo de ese nuevo archivo y los extents asociados a él (bloques de disco que almacenan los datos). Luego, elimina el archivo (`rm`) y verifica qué información de ese archivo permanece después de la eliminación (entrada de inodo, bloque de directorio, bloques de datos, etc.).
 
@@ -522,7 +522,7 @@ debugfs:  block_dump 3678208
 debugfs:
 ```
 
-**Ejercicio 4**
+**<span style="color:red">Ejercicio 4</span>**
 Crea, en tu directorio **$HOME**, un archivo de 512 MB con contenido aleatorio (llámalo `random.txt`). Una vez creado, vamos a mover este archivo al directorio **/home/alumno** de dos formas diferentes, y queremos medir el tiempo consumido en ambas. La primera solución consiste en copiar el contenido de `random.txt` a la nueva ubicación y luego eliminar el archivo fuente `random.txt`. La segunda solución consiste en usar directamente el comando `mv`. Observa el tiempo consumido por ambas operaciones e intenta explicar las diferencias observadas.
 
 Primero creamos el archivo en /home
@@ -545,7 +545,7 @@ sys     0m0,108s
 ```
 Ha sido mucho más rápido con mv, poque solo ha tenido que cambiar las referencias del archivo en vez de escribir de nuevo toda la información en otra ubicación, que es lo que se hace con el comando **cp**.
 
-**Ejercicio 5**
+**<span style="color:red">Ejercicio 5</span>**
 Crea, en el nuevo disco, 5 particiones de 200 MB cada una y formatearlas. Una de ellas tendrá un sistema de archivos ext3, otra reiserfs4, otra xfs5 y las dos restantes ext2 y ext4 respectivamente. Monta las particiones en los directorios "/disco{x}", donde x=1...5. Verifica la capacidad real de cada partición después del proceso de creación y montaje. ¿Es de 200 MB? ¿Tiene cada partición la misma capacidad? Si cada sistema de archivos está vacío, ¿por qué crees que cada uno tiene un valor diferente en el %Used?
 
 Para el tema de particiones vamos a usar sobre todo el comando **gdisk**. Podemos ver las particiones de un disco de la siguiente manera:
@@ -683,7 +683,7 @@ Puedes ver el porcentaje de uso de una partición sin montarla con estos comando
   sudo reiserfsck --stat /dev/sdb2
   ```
 
-**Ejercicio 6**
+**<span style="color:red">Ejercicio 6</span>**
 
 Monta la última partición de forma permanente en el directorio “/home/alumno”. Realiza esta tarea asegurándote de que el usuario **alumno** aún pueda acceder a su contenido en `$HOME` (todos los archivos que estaban en `/home/alumno` antes de montar la partición deben seguir ahí después de este proceso).  
 
@@ -723,7 +723,7 @@ sudo mount -a  # Aplicar cambios de fstab sin reiniciar
 sudo reboot  # Reiniciar el sistema para asegurarse de que la partición se monte correctamente
 ```
 
-**Ejercicio 7**
+**<span style="color:red">Ejercicio 7</span>**
 
 1. **Une las tres primeras particiones en una única partición de tipo ext3** (de la misma manera en que formateaste antes y sin crear un nuevo sistema de archivos, extendiendo el sistema de archivos previamente creado en la primera partición).
 2. **Copia el contenido del directorio `/var` a la nueva partición** que acabas de crear.
@@ -759,7 +759,7 @@ sudo umount /var  # Desmontar /var antes de continuar
 df -h  # Verificar que /var ya no está montado
 ```
 
-**Ejercicio 8**
+**<span style="color:red">Ejercicio 8</span>**
 Pide montar /var en la particion 1 de forma permanente.
 Para asegurarte de que la partición se monte automáticamente en el arranque, edita el archivo **/etc/fstab**:
 ```bash
@@ -769,7 +769,7 @@ sudo nano /etc/fstab
 /dev/sdb1  /var  ext3  defaults  0  2
 ```
 
-**Ejercicio 9**
+**<span style="color:red">Ejercicio 9</span>**
 1. **Une las dos últimas particiones en una única partición** y crea una partición cifrada de tipo LUKS. Esa partición debe estar configurada para incluir el contenido del directorio `/home` (de manera similar a la sección 7).
 2. **Agrega la entrada requerida en el archivo `fstab`** para montar automáticamente tu directorio `/home` cifrado.
 3. **Intenta medir el tiempo adicional necesario** para crear un archivo de 128 MB en un sistema de archivos cifrado.
@@ -919,7 +919,7 @@ usuario    ALL=(ALL)    NOPASSWD:ALL
 
 ## Practica 3
 
-**Ejercicio 1**
+**<span style="color:red">Ejercicio 1</span>**
 Crea un nuevo grupo llamado "prueba" con GID 5000, sin utilizar ninguna herramienta de automatización.
 
 Para crear un nuevo grupo llamado **"prueba"** con GID **5000** en Ubuntu desde la terminal Bash, usa el siguiente comando:  
@@ -937,7 +937,7 @@ con este comando comprobamos que hemos creado el grupo correctamente.
 getent group prueba
 ```
 
-**Ejercicio 2**
+**<span style="color:red">Ejercicio 2</span>**
 Crea (sin herramientas de automatización, ni los comandos `adduser` o `useradd`) un nuevo usuario llamado **"manolito"** y agrégalo al grupo **"prueba"**.  
 
 a. Su **UID** será **5001**. Agrega número de teléfono, correo, etc., en **GECOS** usando `chfn`. La shell debe ser **/bin/bash**. No olvides crear y configurar el directorio de trabajo (**$HOME**).  
@@ -1001,7 +1001,7 @@ Es interesante el uso del comando `chage -l` para ver información sobre la cadu
 sudo chage -l manolito
 ```
 
-**Ejercicio3** 
+**<span style="color:red">Ejercicio 3</span>**
 Inicia sesión en manolito desde otro terminal y cambia la contraseña a una fácil (12345).
 
 (Simplemente iniciar sesión) `ssh manolito@localhost -p 2222`
@@ -1046,7 +1046,7 @@ password        required                        pam_permit.so
 # end of pam-auth-update config
 ```
 
-**Ejercicio4 y 5** 
+**<span style="color:red">Ejercicio 4 y 5</span>**
 Como el usuario manolito, intenta conseguir la contraseña del resto de usuarios usando una "cracking tool" sobre el archivo `/etc/shadow`. 
 Clue: John the Ripper. One more clue: a Debian package exists (john).
 
@@ -1078,7 +1078,7 @@ manolito:12345:5001:5000::/home/manolito:/bin/bash
 4 password hashes cracked, 0 left
 ```
 
-**Ejercicio5**
+**<span style="color:red">Ejercicio 6</span>**
 Borra al usuario manolito y todos sus archivos en el sistema.
 
 - **`deluser --remove-home manolito`**: Elimina al usuario y su directorio personal.
@@ -1177,7 +1177,7 @@ Tenemos un problema, confiar ciegamente en los repositorios APT. No todos estan 
 
 ## Practica 4
 
-**Ejercicio 2**
+**<span style="color:red">Ejercicio 2</span>**
 
 Instala la última versión del servidor SSH (OpenSSH) desde el código fuente en el directorio `/opt/openssh/` (sin sobrescribir la versión actual).  
 
@@ -1283,7 +1283,7 @@ El proceso es como el que usamos para instalr zlib.
 /opt/openssh/sbin/sshd -V   #Esto muestra la version que hemos instalado pero esta NO ES la version que está activa en el sistema.
 ```
 
-**Ejercicio 3**
+**<span style="color:red">Ejercicio 3</span>**
 Haz que la nueva versión del comando `ssh` y el servicio `sshd` sean los predeterminados:  
 
 a. Usa `ssh -V` para comprobar la versión de SSH.  
@@ -1404,7 +1404,7 @@ root@core:~# ssh -V
 OpenSSH_9.9p2, OpenSSL 1.1.1w  11 Sep 2023
 ```
 
-**Ejercicio 4**
+**<span style="color:red">Ejercicio 4</span>**
 El sistema de distribución de Debian permite la generación de paquetes instalables a partir de su código fuente. Descarga y construye (compila) automáticamente con apt-get el paquete .deb para la última versión del editor de texto nedit. Verifica la instalación previamente de un servidor X.
 (Primero intalamos el servidor X y se ejecuta con startx)
 
@@ -1455,7 +1455,7 @@ El sistema de distribución de Debian permite la generación de paquetes instala
    nedit
    ```
 
-**Ejercicio 5**
+**<span style="color:red">Ejercicio 5</span>**
 Para este ejercicio, necesitamos determinar la versión de sed instalada en el sistema, la cantidad de espacio en disco que ocupa y los últimos cambios realizados en la versión instalada. A continuación te doy los pasos y los comandos para realizarlo:
 
 Para este ejercicio, necesitamos determinar la versión de `sed` instalada en el sistema, la cantidad de espacio en disco que ocupa y los últimos cambios realizados en la versión instalada.
@@ -1497,7 +1497,7 @@ Ambos valores son válidos, pero muestran información diferente según el conte
    ```
 
 
-**Ejercicio 6**
+**<span style="color:red">Ejercicio 6</span>**
 Lista las llaves de los repositorios empleados por APT.
 Simplemente ejecutamos:
 ```bash
@@ -1507,7 +1507,7 @@ apt-key list
 ls /etc/apt/trusted.gpg.d/
 ```
 
-**Ejercicio 7**
+**<span style="color:red">Ejercicio 7</span>**
 Cambia la URL de los repositorios de software al espejo (mirror) de Debian más cercano a tu ubicación actual y descarga la información de los paquetes desde estas nuevas fuentes (apt-get update).
 Para comprobar qué mirror estás utilizando antes y después de hacer el cambio, puedes usar este comando: `grep -E '^deb ' /etc/apt/sources.list`
 Para cambiar los repositorios APT al espejo más cercano y actualizar la información de los paquetes, sigue estos pasos:
@@ -1577,7 +1577,7 @@ deb-src http://debian.redimadrid.es/debian/ bullseye-updates main contrib non-fr
 sudo apt-get update
 ```
 
-**Ejercicio 8**
+**<span style="color:red">Ejercicio 8</span>**
 Instala la última versión de Google Chrome desde el repositorio no oficial de Debian. Inicia el servidor X e intenta instalar y usar Google Chrome.
 
 1. **Añadir la clave pública de Google:**
@@ -1605,13 +1605,8 @@ Instala la última versión de Google Chrome desde el repositorio no oficial de 
    google-chrome-stable --no-sandbox
    ```
 
-**Ejercicio 9**
-Se nos pide hacer upgrade de Debian a la ultima version. (Bookworm)
-
-
-**Ejercicio 9**
-Actualizar el sistema a la ultima version (bookworm). Cambiamos en `/etc/apt/source.list` todas las ocurrencias de `bullseye` a `bookworm`.
-
+**<span style="color:red">Ejercicio 9</span>**
+Se nos pide hacer upgrade de Debian a la ultima version. (Bookworm). Cambiamos en `/etc/apt/source.list` todas las ocurrencias de `bullseye` a `bookworm`.
 Después hacemos:
 ```bash
 sudo apt update
