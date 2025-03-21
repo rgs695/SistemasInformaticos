@@ -785,7 +785,64 @@ sudo nano /etc/fstab
 3. **Intenta medir el tiempo adicional necesario** para crear un archivo de 128 MB en un sistema de archivos cifrado.
 
 
-#### TO BE DONE
+**1. Problema inicial: `/home/alumno` estaba en una de las particiones a unir**  
+- `/home/alumno` estaba montado en `/dev/sdb5`, lo que impedía eliminar o modificar la partición directamente.  
+- **Movemos temporalmente los datos a otro lugar y desmontamos la partición:**  
+  ```bash
+  sudo mkdir /mnt/temp_home  # Crear un directorio temporal para guardar los datos de /home/alumno
+  sudo cp -a /home/alumno/* /mnt/temp_home/  # Copiar los datos de /home/alumno al directorio temporal
+  sudo umount /home/alumno  # Desmontar /home/alumno para poder modificar la partición
+  ```  
+
+**2. Unión de particiones**  
+- **Eliminamos las particiones `sdb4` y `sdb5` con `gdisk` y creamos una nueva partición de 400 MB (`sdb2`).**  
+- **Aplicamos los cambios y reiniciamos para que el sistema reconozca la nueva tabla de particiones.**  
+
+**3. Creación de la partición cifrada LUKS**  
+- **Configuramos LUKS en la nueva partición (`sdb2`)**:  
+  ```bash
+  sudo cryptsetup luksFormat /dev/sdb2  # Crear un volumen cifrado en la nueva partición
+  sudo cryptsetup open /dev/sdb2 home_crypt  # Desbloquear la partición cifrada y asignarle el nombre home_crypt
+  ```  
+- **Formateamos el volumen cifrado como `ext4`**:  
+  ```bash
+  sudo mkfs.ext4 /dev/mapper/home_crypt  # Crear un sistema de archivos ext4 dentro del volumen cifrado
+  ```  
+
+**4. Restauración de `/home/alumno`**  
+- **Montamos temporalmente la nueva partición cifrada:**  
+  ```bash
+  sudo mount /dev/mapper/home_crypt /mnt  # Montar la partición cifrada en /mnt para copiar los datos
+  ```  
+- **Restauramos los datos de `/mnt/temp_home/` a la nueva partición:**  
+  ```bash
+  sudo cp -a /mnt/temp_home/* /mnt/  # Copiar los datos de vuelta a la nueva partición cifrada
+  ```  
+- **Desmontamos `/mnt` y montamos la partición cifrada en `/home/alumno`:**  
+  ```bash
+  sudo umount /mnt  # Desmontar el punto temporal
+  sudo mount /dev/mapper/home_crypt /home/alumno  # Montar la partición cifrada en /home/alumno
+  ```  
+
+**5. Automatización del montaje en cada arranque**  
+- **Configuramos `/etc/crypttab` para que la partición se desbloquee automáticamente al inicio:**  
+  ```bash
+  echo "home_crypt /dev/sdb2 none luks" | sudo tee -a /etc/crypttab  # Añadir la partición cifrada a crypttab
+  ```  
+- **Configuramos `/etc/fstab` para que `/home/alumno` se monte automáticamente:**  
+  ```bash
+  echo "/dev/mapper/home_crypt /home ext4 defaults 0 2" | sudo tee -a /etc/fstab  # Configurar el montaje automático en fstab
+  ```  
+- **Aplicamos los cambios y verificamos:**  
+  ```bash
+  sudo mount -a  # Montar todas las particiones definidas en fstab
+  ls /home/alumno  # Verificar que los archivos de /home/alumno se han restaurado correctamente
+  ```  
+
+Por último medimos el tiempo de crear el archivo de 128 Mb.
+```bash
+time dd if=/dev/urandom of=testfile bs=1M count=128  # Crear un archivo de 128 MB con datos aleatorios
+```
 
 ---
 
