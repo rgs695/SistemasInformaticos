@@ -25,6 +25,7 @@ tldr ls
 Fundamentos de la shell, manipulación de strings, variables de entorno y shell scripting. Son los conceptos básicos de la shell de Linux, se ve mejor en la práctica.
 Algunas páginas interesantes:
 - [Gestión de permisos de un archivo](https://es.linux-console.net/?p=20170)
+- [CheatSheets de todo tipo de cosas, entre ellas comandos linuux](https://cheatography.com/)
 
 
 ## Practica 1
