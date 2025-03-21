@@ -7,7 +7,39 @@
    **Respuesta:** Los bits que gestionan los permisos de un archivo en el sistema de ficheros tienen una estructura de 9 bits, divididos en tres conjuntos: los primeros tres bits representan los permisos del propietario, los siguientes tres bits representan los permisos del grupo y los últimos tres bits representan los permisos de otros usuarios. Se modifican mediante comandos como "chmod" en la línea de comandos. Alternativas para la gestión de permisos incluyen ACLs (Listas de Control de Acceso) que permiten definir permisos más granulares.
 
 3. **Pregunta:** Describimos a continuación algunos parámetros de un sistema de ficheros basado en i-nodos: Cada i-nodo de la tabla de i-nodos contiene 5 punteros directos y 1 puntero indirecto de primer nivel. El tamaño de bloque del disco es de 1Kbyte y cada puntero ocupa 8 bytes. Con estos datos, ¿sabrías calcular el tamaño máximo de fichero que soporta nuestro sistema de ficheros?
-   **Respuesta:** El tamaño máximo de fichero que soporta el sistema de ficheros se calcula multiplicando el tamaño del bloque del disco por el número de punteros directos de un i-nodo. En este caso, el tamaño del bloque es de 1 KB (1KByte) y hay 5 punteros directos, entonces el tamaño máximo del fichero sería de 5 KB.
+   **Respuesta:**
+- **5 punteros directos** (apuntan directamente a bloques de datos).
+- **1 puntero indirecto de primer nivel** (apunta a un bloque de punteros, cada uno de los cuales apunta a un bloque de datos).
+- **Tamaño de bloque del disco:** 1 KB (1024 bytes).
+- **Tamaño de cada puntero:** 8 bytes.
+
+ **Cálculo del tamaño máximo del fichero**
+
+ **1. Bloques accesibles por los punteros directos**
+Cada puntero directo apunta a un bloque de datos de 1 KB. Como hay **5 punteros directos**, la cantidad de datos accesibles es:
+\[
+5 \times 1\text{KB} = 5\text{KB}
+\]
+
+ **2. Bloques accesibles mediante el puntero indirecto**
+El puntero indirecto apunta a un **bloque de punteros**. Cada puntero ocupa **8 bytes**, por lo que en un bloque de 1 KB caben:
+\[
+\frac{1024}{8} = 128 \text{ punteros}
+\]
+Cada uno de estos punteros apunta a un bloque de datos de 1 KB, lo que da un tamaño total accesible mediante el puntero indirecto de:
+\[
+128 \times 1\text{KB} = 128\text{KB}
+\]
+
+ **3. Tamaño total máximo del fichero**
+Sumamos los bloques accesibles por los punteros directos y por el puntero indirecto:
+
+\[
+5\text{KB} + 128\text{KB} = 133\text{KB}
+\]
+
+ **Conclusión**
+El tamaño máximo de fichero que soporta este sistema de ficheros es **133 KB**. 
 
 4. **Pregunta:** En el proceso de arranque del sistema operativo conviven dos piezas con un nombre muy similar, el BootManager y el BootLoader. Describe la función de cada uno y en qué etapa del arranque están presentes.
    **Respuesta:** El BootManager es responsable de seleccionar qué sistema operativo o kernel se iniciará en el arranque, mientras que el BootLoader es el encargado de cargar el sistema operativo seleccionado en la memoria. El BootManager está presente en la etapa inicial del arranque, mientras que el BootLoader entra en acción después, en la etapa de carga del sistema operativo.
