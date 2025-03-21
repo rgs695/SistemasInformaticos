@@ -12,6 +12,12 @@
 
 ---
 
+**NOTA: INSTALA ESTE PROGRAMA, es como `man`, te dará información acerca de comandos pero de forma más abreviada y con ejemplos.**
+```bash
+sudo apt install tldr
+tldr ls
+```
+
 # Tema 1: Advanced Shell
 
 ## Teoría
