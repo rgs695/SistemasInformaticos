@@ -57,12 +57,15 @@ debugfs:  block_dump 1210
 ```
 
 Nos fijaremos en estas lineas:
-0340  1000 0801 2e76 696d 696e 666f 1400 0000  .....viminfo....
-0360  0803 0901 696d 6167 652e 706e 6774 742e  ....image.pngtt.
+- 0340  1000 0801 2e76 696d 696e 666f 1400 0000  .....viminfo....
+- 0360  0803 0901 696d 6167 652e 706e 6774 742e  ....image.pngtt.
+
+---
+
 Antes del nombre "image.png" se guarda el num de inodo y otra cosa.
 Avanzamos hacia atrás 8 digitos y los 6 siguientes son el num de inodo del reves.
-00  0803 0901 (campo previo)
-1400 00 (NUMERO DE INODO), que puesto bien (esta en lit endian) es 000014 QUE EN DECIMAL ES 20.
+- 00  0803 0901 (campo previo)
+- 1400 00 (NUMERO DE INODO), que puesto bien (esta en lit endian) es 000014 QUE EN DECIMAL ES 20.
 
-NUMERO DE INODO = 20
+- NUMERO DE INODO = 20
 
