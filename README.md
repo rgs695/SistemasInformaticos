@@ -1719,7 +1719,230 @@ Resolucion de nombres (DNS). Se puede hacer con un DNS, configurado en /etc/reso
 
 ## Practica 5
 
----
+### Configuración
+- **<span style="color:red">Ejercicio 1</span>**
+a. Enciende tu máquina clonada (si-server) e inicia sesión como usuario ‘root’.  
+
+b. Modifica el nombre del host de la máquina virtual de **core** a **core-server1**.  
+```bash
+sudo hostnamectl set-hostname newNameHere
+sudo nano /etc/hosts
+sudo reboot
+```
+
+c. Comprueba las interfaces de red disponibles en la máquina virtual.  
+Hay dos formas:
+```bash
+ip a
+ifconfig -a # esta opcion requiere instalar un paquete
+apt update && apt install net-tools -y  # para instalar el paquete net-tools
+```
+
+d. Usa el comando **ifconfig** para deshabilitar la primera interfaz de red no local (loopback) disponible.  
+Estas son las interfaces que tenemos:
+![alt text](interfaces.png)
+
+Desactivamos la interfaz con `ifconfig enp0s3 down`
+
+e. Vuelve a habilitarla.  
+
+Activamos la interfaz con `ifconfig enp0s3 up`
+
+f. Modifica manualmente la configuración de la segunda interfaz (la que no se está usando) para que esté configurada en modo dinámico mediante el servidor DHCP proporcionado por VirtualBox. Asegúrate de que este cambio sea permanente.
+
+Abrimos `/etc/network/interfaces`
+Añadimos:
+```bash
+auto enp0s8
+iface enp0s8 inet dhcp
+```
+Para comprobar que este bien hacemos `ifconfig` para ver si la interfaz tiene asignada una ip, no esperes encontrarte una etiqueta que ponga "DHCP" lo importante es que tengamos una ip, en este caso la dada fue:
+`10.0.3.15`
+
+g. Reinicia el servicio de configuración de red (o usa los comandos **ifdown/ifup**). Comprueba la IP asignada por el servidor DHCP.  
+```bash
+sudo systemctl restart networking
+```
+
+h. Ahora, conociendo tu IP, configura esta segunda interfaz en modo estático (IP fija) de forma permanente. Indica los parámetros de máscara de red (*netmask*), dirección de red (*network address*), dirección de difusión (*broadcast address*) y la puerta de enlace (*gateway*).
+
+```bash
+# Edita el archivo de configuración de interfaces
+sudo nano /etc/network/interfaces
+
+# Añade lo siguiente al archivo para configurar la IP estática
+# (ajusta los valores según lo que necesites)
+
+# Configuración estática para enp0s8
+allow-hotplug enp0s8
+iface enp0s8 inet static   # Define la interfaz enp0s8 como estática
+    address 10.0.3.15      # Asigna la IP estática
+    netmask 255.255.255.0  # Define la máscara de red
+    network 10.0.3.0       # Dirección de red
+    broadcast 10.0.3.255   # Dirección de difusión
+    gateway 10.0.3.1       # Puerta de enlace (gateway)
+    dns-nameservers 8.8.8.8 8.8.4.4  # Servidores DNS
+
+# Guarda el archivo y sal (CTRL + X, luego Y y Enter)
+
+# Reinicia el servicio de red para aplicar los cambios
+sudo systemctl restart networking  # Reinicia la red
+
+# O también puedes reiniciar la interfaz directamente
+sudo ifdown enp0s8 && sudo ifup enp0s8  # Reinicia solo la interfaz enp0s8
+
+# Verifica la configuración de la interfaz
+ip a show enp0s8  # Muestra la configuración de la interfaz
+
+# Verifica la conectividad (ping a un servidor externo)
+ping -c 4 8.8.8.8  # Realiza un ping para comprobar la conexión
+```
+
+### Routing
+- **<span style="color:red">Ejercicio 2</span>**
+a. Verifica cuál de las interfaces se está utilizando para el acceso a internet. Fuerza todo el tráfico de la máquina virtual para que pase por la otra interfaz de red.
+
+```bash
+ip route  # Muestra las rutas de red y la interfaz predeterminada
+# SE NOS MUESTRA ESTO:
+default via 10.0.2.1 dev enp0s3  # La ruta predeterminada usa la interfaz enp0s3
+```
+Fuerza todo el tráfico de la máquina virtual para que pase por la otra interfaz de red (enp0s8, por ejemplo)
+```bash
+sudo ip route del default  # Elimina la ruta predeterminada actual
+sudo ip route add default via 10.0.3.1 dev enp0s8  # Establece la nueva ruta predeterminada a través de enp0s8 (10.0.3.1 es el gw de enp0s8)
+```
+
+Para verificar que el trafico esta pasando por la nueva interfaz:
+```bash
+ip route  # Muestra las rutas de red y verifica la nueva ruta predeterminada
+default via 10.0.3.1 dev enp0s8  # La ruta predeterminada ahora usa enp0s8
+ping -c 4 8.8.8.8  # Verifica la conectividad con Google DNS
+```
+
+b. Divide el tráfico de red entre ambas interfaces. Todo el tráfico cuyo destino sea la red pública de nuestra Facultad de Ciencias (193.144.198.0) debe ir a través de una interfaz, mientras que el resto del tráfico debe pasar por la otra interfaz.
+
+El tráfico hacia la red pública de la Facultad de Ciencias (193.144.198.0/24) se enruta a través de la interfaz enp0s3, mientras que todo el resto del tráfico pasa por la interfaz enp0s8.
+
+```bash
+# Añade una ruta para el tráfico de la Facultad de Ciencias (193.144.198.0/24) a través de enp0s3
+sudo ip route add 193.144.198.0/24 via 10.0.2.1 dev enp0s3  # Tráfico hacia 193.144.198.0 va por enp0s3
+
+# Añade una ruta predeterminada para el resto del tráfico a través de enp0s8
+sudo ip route add default via 10.0.3.1 dev enp0s8  # El resto del tráfico va por enp0s8
+
+# Verifica las rutas configuradas
+ip route  # Muestra las rutas de red actuales
+
+# Verifica la conectividad hacia la Facultad de Ciencias
+ping -c 4 193.144.198.222  # Ping a la red de la Facultad de Ciencias
+
+# Verifica la conectividad hacia un sitio externo (Google)
+ping -c 4 8.8.8.8  # Ping a Google DNS para comprobar el tráfico fuera de la Facultad
+```
+
+c. Verifica que todo funciona correctamente haciendo un ping o traceroute a la IP 193.144.198.222 (por ejemplo) y a www.google.es.
+
+d. ¿Es posible averiguar cuál es la dirección Ethernet (MAC) de www.ce.unican.es desde la máquina virtual? ¿Por qué?
+
+No es posible obtener directamente la dirección MAC de un servidor externo como www.ce.unican.es desde la máquina virtual. Esto se debe a que las direcciones MAC solo son relevantes en la misma red local (LAN) o subred de la interfaz de red con la que estás comunicándote. La dirección MAC es utilizada en la capa de enlace de datos (capa 2 del modelo OSI), que solo se utiliza para la comunicación dentro de la misma red local.
+
+- **<span style="color:red">Ejercicio 3</span>**
+
+### Servicio de Nombres de Dominio (DNS) y Protocolo de Configuración Dinámica de Host (DHCP)
+
+a. Configura el sistema para que www.elpais.es apunte realmente a "localhost". En otras palabras, el sistema debe resolver el nombre www.elpais.es con la IP 127.0.0.1. Verifica que funciona.
+
+Muy sencillo, solo hay que editar `/etc/hosts` de forma que añadamos la linea `127.0.0.1  www.elpais.es`
+
+b. Configura el archivo /etc/hosts para que ambas máquinas virtuales puedan resolver los nombres de otros hosts. Verifica que funciona.
+
+Hay que configurar `/etc/hosts` en ambas VMs.
+
+**IPs:**  
+- Cliente: `10.0.2.4`  
+- Servidor: `10.0.2.15`  
+
+**Editar `/etc/hosts` en ambas VMs:**  con `sudo nano /etc/hosts`
+
+Añadir:  
+```
+10.0.2.15   servidor  
+10.0.2.4    cliente  
+```
+**Verificar:**  
+Desde **cliente** → `ping -c 4 servidor`  
+Desde **servidor** → `ping -c 4 cliente`  
+
+c. Incluye el dominio sci.unican.es en la búsqueda automática. Verifica si un ping al hostname calderon se autocompleta correctamente.
+
+Modificamos `/etc/resolv.conf` y le añadimos al inicio la linea `search sci.unican.es`.
+
+- **<span style="color:red">Ejercicio 4</span>**
+### Reconfiguración de red IPv4
+
+a. Configura el core-server para que actúe como Gateway/Proxy (predeterminado) para core. Debes habilitar el ip-forwarding en la configuración del kernel del core-server y eliminar todas sus rutas relacionadas con enp0s8. Luego, en ambas máquinas (core y core-server), configura de manera estática y permanente la interfaz enp0s3. En core-server (IP: 10.0.2.5, GW: 10.0.2.1) y en core (IP: 10.0.2.6, GW: 10.0.2.5).
+
+Ojo al ecribir configuraciones en este ejercicio, muchas veces no vemos los cambios en las inerfaces hasta que no hacemos reboot
+**Configuración del core-server (Gateway/Proxy)**
+
+**1. Habilitar IP Forwarding en core-server**
+```bash
+sudo sysctl -w net.ipv4.ip_forward=1    # Habilitar IP forwarding temporal
+sudo nano /etc/sysctl.conf               # Editar archivo para hacerlo permanente
+# Añadir o descomentar:
+# net.ipv4.ip_forward = 1
+sudo sysctl -p                          # Aplicar cambios
+```
+
+**2. Eliminar rutas de `enp0s8` en core-server**
+```bash
+ip route                                # Ver rutas
+sudo ip route del [ruta_a_eliminar]     # Eliminar rutas relacionadas con enp0s8
+```
+
+**3. Configurar IP estática en `enp0s3` en core-server**
+```bash
+sudo nano /etc/network/interfaces      # Editar interfaces
+# Añadir:
+# iface enp0s3 inet static
+# address 10.0.2.5
+# netmask 255.255.255.0
+# gateway 10.0.2.1
+sudo systemctl restart networking      # Reiniciar la red
+```
+
+**Configuración de core (Cliente)**
+
+**4. Configurar IP estática en `enp0s3` en core**
+```bash
+sudo nano /etc/network/interfaces      # Editar interfaces
+# Añadir:
+# iface enp0s3 inet static
+# address 10.0.2.6
+# netmask 255.255.255.0
+# gateway 10.0.2.5
+sudo systemctl restart networking      # Reiniciar la red
+```
+
+**Verificación**
+**5. Verificar IP forwarding en core-server**
+```bash
+sudo sysctl net.ipv4.ip_forward
+```
+
+**6. Probar conectividad y rutas**
+Desde **core**:
+```bash
+ping 10.0.2.5                          # Verificar conexión con core-server
+traceroute 8.8.8.8                     # Verificar que pasa por core-server
+```
+
+
+
+b. Verifica que el tráfico de red de core hacia "internet" pase a través de core-server. Utiliza el comando traceroute para comprobarlo.
+
+`traceroute 8.8.8.8                     # Verificar que pasa por core-server`
 
 # Tema 6: Arranque y Parada
 
