@@ -2139,125 +2139,36 @@ Pasos para un correcto apagado:
 **EXTRA** Apéndice en los apuntes.
 
 ## Practica 6
-(Volcado de las notas de la practica)
-```
-PRACTICA UEFI DE SI EJERCICIO 1
 
-[ (SI) root@core ~/EFI/debian ] efibootmgr -v
-BootCurrent: 0004
-Timeout: 0 seconds
-BootOrder: 0004,0000,0001,0002,0003,0005
-Boot0000* UiApp FvVol(7cb8bdc9-f8eb-4f34-aaea-3ee4af6516a1)/FvFile(462caa21-7614-4503-836e-8ab6f4662331)
-Boot0001* UEFI VBOX CD-ROM VB2-01700376  PciRoot(0x0)/Pci(0x1,0x1)/Ata(1,0,0)N.....YM....R,Y.
-Boot0002* UEFI VBOX HARDDISK VBa5930d44-59f93250  PciRoot(0x0)/Pci(0xd,0x0)/Sata(0,65535,0)N.....YM....R,Y.
-Boot0003* EFI Internal Shell    FvVol(7cb8bdc9-f8eb-4f34-aaea-3ee4af6516a1)/FvFile(7c04a583-9e3e-4f1c-ad65-e05268d0b4d1)
-Boot0004* debian  HD(1,GPT,ac845023-8f86-46ba-8567-366f43d3b3d0,0x800,0x100000)/File(\EFI\debian\shimx64.efi)
-Boot0005  EFI Internal Shell    FvVol(7cb8bdc9-f8eb-4f34-aaea-3ee4af6516a1)/FvFile(7c04a583-9e3e-4f1c-ad65-e05268d0b4d1)
+- **<span style="color:red">Ejercicio 2</span>**
 
-[ (SI) root@core ~/EFI/debian ] lsblk
+En la partición de arranque, averigua cuál es el gestor de arranque predeterminado (archivo .efi) utilizado para el arranque del sistema. Renómbralo (añadiendo los caracteres “no” al principio del nombre del archivo) e intenta reiniciar tu sistema para ver qué sucede.
+
+Primero tengamos en cuenta estos dos comandos. Con `lsblk` identifiamos la particion en la que se encuentra `/boot/efi` y con `efibootmgr` vemos las opciones de arranque y el orden en que se intentan lanzar.
+
+```bash
+[ (SI) root@core ~ ] lsblk
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINT
 sda      8:0    0   20G  0 disk
-├─sda1   8:1    0  512M  0 part /root
+├─sda1   8:1    0  512M  0 part /boot/efi   # Particion uefi
 ├─sda2   8:2    0 18,5G  0 part /
 └─sda3   8:3    0  976M  0 part [SWAP]
 sr0     11:0    1 1024M  0 rom
+[ (SI) root@core ~ ] sudo efibootmgr
+BootCurrent: 0004
+Timeout: 0 seconds
+BootOrder: 0004,0000,0001,0002,0003,0005    #orden de arranque
+Boot0000* UiApp
+Boot0001* UEFI VBOX CD-ROM VB2-01700376
+Boot0002* UEFI VBOX HARDDISK VBa5930d44-59f93250
+Boot0003* EFI Internal Shell
+Boot0004* debian
+Boot0005  EFI Internal Shell
+```
 
-[ (SI) root@core ~/EFI/debian ] mount /dev/sda1 /root
-mount: /root: /dev/sda1 ya está montado en /boot/efi.
-
-[ (SI) root@core ~/EFI/debian ] pwd
-/root/EFI/debian
-
-[ (SI) root@core ~/EFI/debian ] ls
-BOOTX64.CSV  fbx64.efi  grub.cfg  grubx64.efi  mmx64.efi  shimx64.efi
-
-[ (SI) root@core ~/EFI/debian ] mv shimx64.efi noshimx64.efi
-
-[ (SI) root@core ~/EFI/debian ] ls
-BOOTX64.CSV  fbx64.efi  grub.cfg  grubx64.efi  mmx64.efi  noshimx64.efi
-###########################################################################################################################
-
-PRACTICA UEFI EJERCICIO 2
-vamos a arreglar lo del 1
-
-dentro de la shell de UEFI ejecutamos bcfg para mirar estas cosas
-bcfg boot dump –v para ver las entradas de arranque
-navegamos por el disco fs0:
-en este disco TENEMOS QUE BUSCAR si hay un .efi
-Si encontramos un .efi le ponemos como primera opcion de arranque para que al encender el sistema lo inicie
-¿Como hacemos eso?
-
-bcfg boot add 0 fs0:\EFI\debian\archivo.efi
-
-IMPORTANTE, esta shell tiene el teclado en ingles, los caracteres cambian, ademas
-la ruta del efi se escribe con contrabarras
-########################################################################
-
-EJERCICIO 3
-ahora simplemente montamos el /dev/sda1 en algun directorio, en mi caso hice un
-cd /home
-mkdir disco
-mount /dev/sda1 /home/disco
-cd /home/disco/uefi/debian
-mv shimx64.efi /root
-OJO; debia mover TODOS los .efi
-umount /dev/sda1
-
-Y reiniciamos
-El inicio fallara porque no se encuantra el uefi
-########################################################################
-
-EJERCICIO 4
-En este caso no tenemos .efi, lo que podriamos hacer es dos cosas.
-Meter un cdrom y "robarle" los .efi para pasarlos a nuestro sistema, o tomar el kernel
-y ejecutarlo desde nuestra particion de arranque.
-Sea como sea, cargamos el cdrom, que tiene un sistema operativo, y montamos dos
-puntos de arranque, uno para sda1(particion de arranque) y otro para sda2(sistema de ficheros)
-copiamos el kernel y el init Que estan en /boot
-– vmlinuz-4.9.0-4-amd64
-– initrd.img-4.9-0-4-amd64
-del sda2 al sda1, que es el sistema de arranque.
-ya podemos desmontar los discos y reiniciar
-IMPORTANTE; expulsa el cdrom
-Ahora al iniciar en fs0: tendremos estos dos archivos.
-
-COMO ARRANCAR EL KERNEL MUY IMPORTANTE
-> FS0:
-> \vmlinuz-linux root=/dev/sda2 initrd=\initramfs-linux.img
-OJO, ponemos el sda2 porque es donde esta la raiz del sistema de ficheros
-En efi, los directorios se marcan con \ y en linux con / en este comando se usan los dos.
-
-Lo siguiente que nos piden es que se lance este kernel de forma automatica.
-Como? con un script. Para ello creamos el script startup.nsh en el disco de arranque
-y le metemos los comandos previamente utilizados (/boot/efi/startup.nsh)
-
-#!/bin/bash
-
-echo "Cargando kernel y initramfs..."
-FS0:
-\vmlinuz-5.10.0-20-amd64 root=/dev/sda2 initrd=\initrd.img-5.10.0-20-amd64
-###############################################################################
-NOTAS DE ESTA PRIMERA PARTE
-Cuando el sistema no arranca lo mas importante es ver si tenemos los .efi primero,
-si es asi podemos lanzarlos en el arranque
-si no, deberiamos tener dos opciones, conseguir de un cd rom un kernel o los .efi necesarios
-SIGUE ESTOS PASOS SIEMPRE
-
-
-CONTINUACION PARTE 1 (EJ 6-9)
-EJ 6
-Simplemente instalar el gestor de arranque
-sudo apt update
-sudo apt install refind
-
-EJ 7
-efibootmrg -v para ver el orden de arranque
-
-Este es el resultado del ejercicio. Originalmente el orden de boot marcaba el 0006 como el primero (Que es refind). Hemos cambiado el orden
-de booteo con el comando:	efibootmgr -o 0004,0000,0001,0002,0003,0005
-OJO, IMPORTANTE LAS , Y NO DEJAR ESPACIOS ENTRE LOS NUMEROS
-
-[ (SI) root@core ~ ] efibootmgr -v
+Con la opcion `efibootmgr -v` vemos con más detalle las opciones.
+``` bash
+[ (SI) root@core /boot/efi/efi/debian ] sudo efibootmgr -v
 BootCurrent: 0004
 Timeout: 0 seconds
 BootOrder: 0004,0000,0001,0002,0003,0005
@@ -2267,96 +2178,382 @@ Boot0002* UEFI VBOX HARDDISK VBa5930d44-59f93250        PciRoot(0x0)/Pci(0xd,0x0
 Boot0003* EFI Internal Shell    FvVol(7cb8bdc9-f8eb-4f34-aaea-3ee4af6516a1)/FvFile(7c04a583-9e3e-4f1c-ad65-e05268d0b4d1)
 Boot0004* debian        HD(1,GPT,ac845023-8f86-46ba-8567-366f43d3b3d0,0x800,0x100000)/File(\EFI\debian\shimx64.efi)
 Boot0005  EFI Internal Shell    FvVol(7cb8bdc9-f8eb-4f34-aaea-3ee4af6516a1)/FvFile(7c04a583-9e3e-4f1c-ad65-e05268d0b4d1)
-Boot0006* rEFInd Boot Manager   HD(1,GPT,ac845023-8f86-46ba-8567-366f43d3b3d0,0x800,0x100000)/File(\EFI\refind\refind_x64.efi)
+```
 
-EJ 8
-En este caso hemos cambiado el nombre del vmliuz, entonces el grub, no puede encontrarlo.
-Este archivo esta en /boot.
+Identificamos "boot0004" como la primera opcion y se nos indica qye archivo es y su ruta (`\EFI\debian\shimx64.efi`). Así que este es el nombre que vamos a modificar, para cambiar el nombre hacemos un `mv` dentro del propio directorio con otro nombre. `mv /boot/efi/efi/debian/shimx64.efi /boot/efi/efi/noshimx64.efi`. Al reiniciar la maquina el arranque falla y acabamos en la shell UEFI. Esta shell es especial, tiene teclado inglés así que algunas teclas tendran disposición distinta.
 
-Si nos encontramos con este problema (sin saber el origen) pasara lo siguiente:
-Al encender el equipo nos quedamos en la pantalla azul, y si damos al enter en la primera opcion para lanzar debian no va.
-Debemos acceder a la shell grub (dando a la tecla c en este menu)
-Dentro de esta buscaremos bootear el sistema desde un archivo vmlinuz, para eso tendremos que mirar en /boot si hay alguno.
-Al hacer ls vemos las unidades de almacenamiento, nuestra raiz, (Donde esta el sistema de ficheros) estará en (hd0,gpt2) es decir /dev/sda2
-Podemos hacer ls pero no cd en esta terminal, si hacemos ls (hd0,gpt2)/boot podremos leer este directorio.
-Si en el encontramos un vmlinuz podremos bootearlo desde este, como?
-Con tres comandos:
+- **<span style="color:red">Ejercicio 3</span>**
+Busca la mejor manera de recuperarte de los problemas causados por el cambio de nombre anterior. Las correcciones realizadas deben ser permanentes. ¿Cómo solucionarías el problema si no se te permite volver a cambiar el nombre del archivo .efi? Verifica si tu solución funciona.
 
-Primero le decimos el vm que tomara:	linux /boot/[vmlinuz...] root=/dev/sda2
-Despues le indicaremos el init:		initrd /initrd.img
-Por ultimo ejecutaremos boot:		boot
-Y el sistema se iniciará.
-OJO
-Para arreglar esto de forma permanente, una vez hemos conseguido bootear, ejecutaremos
-update-grub
-esto buscara y actualizara los archivos necesarios para que el grub inicie.
+La forma de solucionarlo sería editar el archivo que elige el orden de arranque de uefi para ponerle en primer lugar nuestro archivo modificado. Ahora está fallando porque usa el nombre anterior y no lo encuentra.
 
-EJ 9
-[ (SI) root@core ~ ] wget --user=alumno --ask-password https://www.ce.unican.es/SI/Grub/grub.png
-Buscando en el fichero 05_debian_theme vemos que busca las imágenes en /boot/grub/
-Copiamos la imagen en /boot/grub/
-[ (SI) root@core ~ ] update-grub
+![shellUEFI](shellUEFI.png)
 
-#########################################################################################################################################
-PARTE 2
+Si nos fijamos cuando se abre la shell UEFI se nos enseña la tabla de particiones. Tenemos que ver donde está GPT1, que sería sdb1, la partición donde tenemos el arranque. Dentro de esta shell podemos usar el comando `help` para ver los comandos que podemos utilizar. Además entre estos está `edit`, un editor de texto como nano y `bcfg`, muy importante para cambiar las opciones de arranque.
 
-Ej 1
-Ej 2
+[Referencia a comandos de UEFI shell](https://docstore.mik.ua/manuals/hp-ux/en/5991-1247B/ch04s13.html)
 
-• a The services that are loaded.
-En el directorio /lib/systemed/system
-[ (SI) root@core /lib/systemd/system ]ls *.service
+**NOTAS:** 
+1. Para poner `:` en esta shell utilizar "Shift Ñ". 
+2. Las barras de las rutas son a la inversa `\` en vez de `/`.
 
-• b The active targets and running services.
-Active Targets
-(SI) root@core ~ ] systemctl list-units --type target --state active
-Running Targets
-(SI) root@core ~ ] systemctl list-units --type service --state running
+![Keyboard](keyboard.png)
+        
+``` bash
+# COMANDOS UTILIZADOS PARA ARREGLAR EL ARRANQUE EN ESTE CASSO:
+map -R # ver la tabla (vemos que la particion esta en fs0)
+fs0: # nos movemos a la particion
+ls # un ls para ver el sistema de ficheros
+cd /EFI/debian # movernos a la ruta del archivo
+bcgf boot dump # ver las opciones en detalle
+bcfg boot add 0 fs0:\EFI\debian\noshimx64.efi "Boot ej 2" # añadir una nueva entrada en el puesto 0
+bcgf boot dump # ver cambios
+reset # guardar y reiniciar
+```
 
-• c The dependencies among targets.
-System dependencies
-[ (SI) root@core ~ ] systemctl list-dependencies
+- **<span style="color:red">Ejercicio 4</span>**
+Ahora, mueve todos los archivos .efi en /boot/efi/EFI/debian fuera de la partición EFI (por ejemplo, a /root). Intenta reiniciar y verifica qué sucede.
+(¿Hay alguna forma de continuar con el proceso de arranque?)
+``` bash
+[ (SI) root@core ~ ] sudo mv /boot/efi/EFI/debian/*.efi /root/
+```
 
-Ej 3
-Para este ejercicio nos piden crear un servicio.
-Primero necesitamos un script, en este caso nos lo dan y lo guardaremos en /root ES IMPORTANTE DARLE LOS PERMISOS AL SCRIPT
-SI NO EL SERVICIO FALLARA AL EJECUTARSE
-Despues debemos ir a /etc/systemd/system En este directorio crearemos el servicio (.service)
-Esta es la tipica estructura que siguen.
+- **<span style="color:red">Ejercicio 5</span>**
+Implementa el proceso de recuperación, siguiendo los siguientes pasos:
 
-[ (SI) root@core /etc/systemd/system ] cat check-disk-space.service
+1. Descarga un System Rescue CD desde nuestro servidor de descargas, y arranca tu máquina virtual desde la ISO descargada.
+
+2. Busca los archivos kernel e initramfs en la partición raíz y copia estos archivos a la partición de arranque.
+
+3. Reinicia tu sistema e intenta arrancarlo manualmente desde la EFI Shell de VirtualBox, sin usar ningún gestor de arranque, es decir, arrancando el kernel de Linux directamente.
+
+4. Ahora, configura el sistema EFI para automatizar este proceso (el sistema debe arrancar Linux sin intervención del usuario).
+
+Seguimos el paso 1 añadiendo el disco con el iso a VirtualBox. Despues arrancamos el sistema. En la shell de UEFI ejecutamos `exit`, esto nos llevará a la interfaz gráfica (típico menú de bios). Desde las `Boot options` booteamos el iso y entramos en el debian de este sistema. Una vez dentro, en el directorio root creamos los directorios `disco1 y disco2` y montamos en ellos `/dev/sda1` y `/dev/sda2`, que son el sistema de arranque y de ficheros. desde el de ficheros accedemos a `boot` y buscamos los archivos `vmlinuz y init` (deben ser de la misma versión) y los copiamos a disco1 (el sistema de arranque). Una vez hecho esto desmontamos y reiniciamos para pasar al siguiente paso.
+
+Al reiniciar volvemos a la shell UEFI, debemos entrar en la particion de arranque (FS1). La forma de saber que es FS1 es porque es del tipo GPT y hay varias particiones GPT, lo que se corresponde con nuestro sistema de ficheros. Una vez accedemos a la ubicacion del kernel y el init tendremos que ejecutar cierto comando para arrancar y restaurar el sistema.
+
+```bash
+vmlinuz-5.10.0-20-amd64 root=/dev/sda2 initrd=\EFI\debian\initramfs-linux.img
+```
+
+Con este comando arrancaremos el sistema pero si se apaga volveremos a estar en la shell de UEFI sin poder arrancar. La solución es crear el script `startup.nsh` en `/boot/efi`.
+
+Este comando se vería tal que:
+```bash
+#!/bin/bash
+
+echo "Cargando kernel y initramfs..."
+FS0:
+cd EFI
+cd debian
+vmlinuz-5.10.0-20-amd64 root=/dev/sda2 initrd=\EFI\debian\initramfs-linux.img
+```
+- **<span style="color:red">Ejercicio 6 y 7</span>**
+Apaga la máquina, haz una instantánea y restaura el estado inicial de tu máquina virtual.
+
+Instala el gestor de arranque llamado rEFInd (http://www.rodsbooks.com/refind/). Reinicia tu máquina virtual después de la instalación y comprueba cuál de los dos gestores de arranque instalados se está utilizando."
+
+```bash
+# Actualizar lista de paquetes e instalar dependencias necesarias
+apt update
+apt install wget unzip efibootmgr
+
+# Descargar rEFInd desde SourceForge
+cd /tmp
+wget https://sourceforge.net/projects/refind/files/0.14.0.2/refind-bin-0.14.0.2.zip
+
+# Descomprimir el archivo
+unzip refind-bin-0.14.0.2.zip
+cd refind-bin-0.14.0.2
+
+# Instalar rEFInd en la partición EFI
+./refind-install
+
+reboot
+```
+- **<span style="color:red">Ejercicio 8</span>**
+Configura el proceso de arranque para restaurar GRUB como la opción de arranque predeterminada, sin desinstalar rEFInd.
+
+Es fácil, simplemente ejecutando dos comandos vemos el orden de booteo y lo modificamos.
+
+```bash
+[ (SI) root@core ~ ] sudo efibootmgr
+BootCurrent: 0006
+Timeout: 0 seconds
+BootOrder: 0006,0004,0000,0001,0002,0003,0005
+Boot0000* UiApp
+Boot0001* UEFI VBOX CD-ROM VB2-01700376
+Boot0002* UEFI VBOX HARDDISK VBa5930d44-59f93250
+Boot0003* EFI Internal Shell
+Boot0004* debian
+Boot0005  EFI Internal Shell
+Boot0006* rEFInd Boot Manager
+[ (SI) root@core ~ ] sudo efibootmgr -o 0004,0006,0000,0001,0002,0003,0005
+```
+
+- **<span style="color:red">Ejercicio 9</span>**
+Busca la ruta donde GRUB espera encontrar los kernels para arrancar, y renombra los archivos del kernel que se encuentren en esa ruta para que los scripts de GRUB no puedan encontrarlos. Reinicia la máquina virtual. ¿Qué sucede? ¿Por qué? Intenta arrancar tu sistema mediante las opciones de línea de comandos de GRUB.
+
+Para solucionar este problema (la maquina no arranca porque no encuentra el kernel y el init), buscaremos la forma que sea para poder arrancar el sistema, en mi caso desde boot options use una opcion de arranque distinta y una vez arrancado el sistema ejecuté `update-grub` para actualizar el grub y al reiniciar, todo funcionó.
+
+- **<span style="color:red">Ejercicio 10</span>**
+Usa el archivo grub.png como imagen de fondo de GRUB. Además, añade una nueva entrada al menú de arranque, etiquetada como MY-DEBIAN. Esta nueva entrada debería arrancar el sistema utilizando la versión anterior del kernel que se encuentra en tu sistema de archivos (5.10.0-20). Configúrala como la opción de arranque predeterminada. Toma las acciones necesarias para hacer estas modificaciones y verifica si funcionan.
+
+Aquí tienes la lista completa de **comandos** que utilizamos para configurar la imagen de fondo de GRUB, añadir la entrada personalizada para el kernel 5.10.0-20 y configurar esa entrada como predeterminada.
+
+**1. Configurar la imagen de fondo de GRUB**
+
+```bash
+# Copiar la imagen a la carpeta de GRUB
+sudo cp /ruta/a/grub.png /boot/grub/grub.png
+
+# Editar el archivo de configuración de GRUB
+sudo nano /etc/default/grub
+
+# Añadir o modificar la línea:
+GRUB_BACKGROUND="/boot/grub/grub.png"
+
+# Actualizar GRUB
+sudo update-grub
+```
+
+**2. Añadir una nueva entrada para el kernel antiguo (5.10.0-20)**
+
+```bash
+# Editar el archivo de configuración personalizada de GRUB
+sudo nano /etc/grub.d/40_custom
+
+# Añadir la entrada personalizada para el kernel 5.10.0-20
+menuentry "MY-DEBIAN" {
+    set root=(hd0,2)  # Ajustar según tu partición
+    linux /boot/vmlinuz-5.10.0-20-amd64 root=/dev/sda2 ro
+    initrd /boot/initrd.img-5.10.0-20-amd64
+}
+
+# Actualizar GRUB para aplicar los cambios
+sudo update-grub
+```
+
+**3. Configurar la nueva entrada como predeterminada**
+
+```bash
+# Editar el archivo de configuración de GRUB
+sudo nano /etc/default/grub
+
+# Modificar o añadir la línea para establecer la entrada predeterminada:
+GRUB_DEFAULT="MY-DEBIAN"  # O usa el número de la entrada, por ejemplo GRUB_DEFAULT=2
+
+# Actualizar GRUB
+sudo update-grub
+```
+
+**4. Verificar los cambios y reiniciar**
+
+```bash
+# Reiniciar la máquina
+sudo reboot
+```
+
+--- 
+
+**PARTE 2**
+
+- **<span style="color:red">Ejercicio 1</span>**
+Realiza las acciones necesarias para explorar el contenido del ramdisk initrd utilizado para arrancar tu sistema. ¿Sería posible arrancar el sistema correctamente si la partición raíz (/) usa un sistema de archivos CEPH?
+
+**TO BE DONE**
+
+- **<span style="color:red">Ejercicio 2</span>**
+Restaura el snapshot inicial de la práctica, arranca la máquina virtual y revisa la siguiente información sobre el proceso de arranque de systemd:
+
+1. Los servicios que se cargan.
+`systemctl list-units --type=service`
+
+2. Los targets activos y los servicios en ejecución.
+`systemctl list-units --type=target` (Targets activos).
+`systemctl list-units --type=service --state=running` (Servicios en ejecución).
+
+3. Las dependencias entre targets.
+`systemctl list-dependencies` (Ver las dependencias entre los targets)
+`systemctl list-dependencies multi-user.target` (Ver las dependencias de un target especifico, en este caso multiuser).
+
+- **<span style="color:red">Ejercicio 3</span>**
+Implementa un nuevo servicio personalizado llamado check-disk para ejecutarse en tu máquina virtual. Este servicio ejecuta el script check-disk-space.sh para monitorear el uso del disco en la partición del sistema. Revisa el contenido del script y averigua cómo ejecutarlo correctamente. Tu servicio debe estar configurado para iniciarse en el modo de operación multi-user y requiere que el servicio cron esté en funcionamiento. Además, debe comenzar después de que los servicios cron y de red hayan iniciado.
+
+1. Encuentra una forma de verificar que todos los requisitos estén cumplidos.
+2. Verifica qué sucede con tu servicio si detienes el servicio cron. Intenta reiniciar tu servicio y verifica qué sucede con las dependencias.
+
+**1. Crear el script `check-disk-space.sh`**
+
+Primero, se creó un script para monitorear el uso del disco en la partición raíz (`/`). El script se configura para verificar el espacio libre y enviar un correo de advertencia si el uso supera un umbral determinado (en este caso, el 80%).
+
+**Contenido del script**:
+
+```bash
+#!/bin/bash
+# check-disk-space.sh
+# Script to monitor disk usage on the system partition
+
+# Set the threshold to 80%
+THRESHOLD=80
+
+while true; do
+    # Get disk usage
+    DISK_USAGE=$(df / | grep / | awk '{ print $5 }' | sed 's/%//g')
+
+    # Check if disk usage is above threshold
+    if [ $DISK_USAGE -gt $THRESHOLD ]; then
+        echo "Disk usage is over $THRESHOLD%! Current usage: $DISK_USAGE%" | mail -s "Disk Usage Warning" your-email@example.com
+    fi
+
+    # Sleep for 5 minutes (300 seconds)
+    sleep 300
+done
+```
+**Explicación**:
+- **`while true; do ... done`**: Bucle infinito para que el script se ejecute continuamente.
+- **`sleep 300`**: El script espera 5 minutos antes de realizar otra comprobación.
+- **`df /`**: Comando utilizado para obtener el uso de disco de la partición raíz.
+- **`mail`**: Si el uso del disco supera el 80%, el script envía un correo electrónico como advertencia.
+
+#### **Hacer el script ejecutable**:
+
+```bash
+sudo chmod +x /usr/local/bin/check-disk-space.sh
+```
+
+---
+
+**2. Crear el servicio `check-disk.service`**
+
+Luego, se creó un archivo de unidad de `systemd` para gestionar el servicio que ejecuta el script de manera continua.
+
+#### **Contenido del archivo `check-disk.service`**:
+
+```ini
+[Unit]
+Description=Check Disk Space Service
+After=network.target cron.service
+
 [Service]
-Type=simple
-ExecStart=/root/check-disk-space.sh /dev/sda2
+ExecStart=/usr/local/bin/check-disk-space.sh
 Restart=always
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+
 [Install]
 WantedBy=multi-user.target
-Alias=check-disk.service
-systemctl start 'servicio'
-ˆsystemctl enable 'servicio'
-
-Para correr y hacer cosas con el servicio usamos el comando systemctl
-systemctl enable myservicio.service
-systemctl start myservicio.service
-systemctl status myservicio.service
-
-Si hicimos todo bien al hacer reboot veremos que el servicio aun esta corriendo.
-(PARA ESTE EJERCICIO TIENES UN AUDIO GRABADO EN EL MOVIL)
-
-PASOS:
-1CREACION:	-execStart:	script funciona??
-				permisos + PATH
-		-Evitar directivas inutiles
-
-2COMPROBACION:	-Esta creado? (enabl+start)
-		-Dependencia target (se inicia en arranque?)
-		-Dependencia servicios (wants requires)
-		-Relaciones temporales (After/before): systemd-analyse
-
-EJERCICIO 5 ES CAMBIAR EL TARJET Y VER COMO NO SE LANZA AL INICIAR EL SISTEMA
-
-EJERCICIO 6 y 7 pendientes.
 ```
+
+**Explicación de las directivas**:
+
+1. **[Unit]**:
+   - **`Description`**: Proporciona una breve descripción del servicio. En este caso, es un servicio para verificar el uso del disco.
+   - **`After`**: Especifica que el servicio debe ejecutarse después de que los servicios de red (`network.target`) y cron (`cron.service`) estén activos. Esto garantiza que el servicio no se ejecute antes de que estos servicios sean cargados.
+
+2. **[Service]**:
+   - **`ExecStart`**: Especifica el comando que `systemd` ejecutará cuando se inicie el servicio. Aquí se le dice a `systemd` que ejecute el script `/usr/local/bin/check-disk-space.sh`.
+   - **`Restart`**: La directiva `Restart=always` asegura que el servicio se reinicie automáticamente si el script falla o se detiene por alguna razón.
+   - **`RestartSec`**: Especifica el tiempo en segundos que `systemd` debe esperar antes de reiniciar el servicio en caso de fallo. En este caso, se ha configurado un retraso de 5 segundos.
+   - **`StandardOutput` y `StandardError`**: Estas directivas permiten redirigir la salida estándar y los errores del servicio a `syslog`, lo que facilita la monitorización de los mensajes generados por el script.
+
+3. **[Install]**:
+   - **`WantedBy=multi-user.target`**: Esta directiva configura el servicio para que se inicie en el objetivo de "multiusuario" (`multi-user.target`), que es el estado estándar para sistemas Linux sin una interfaz gráfica de usuario.
+
+---
+
+### **3. Habilitar y ejecutar el servicio**
+
+Una vez creado el archivo de servicio, se procedió a recargar `systemd` para que reconozca el nuevo servicio y luego habilitarlo para que se ejecute automáticamente al arrancar el sistema.
+
+#### **Comandos para recargar, habilitar y arrancar el servicio**:
+
+```bash
+sudo systemctl daemon-reload       # Recarga systemd para que reconozca la nueva configuración.
+sudo systemctl enable check-disk.service  # Habilita el servicio para que se inicie automáticamente al arranque.
+sudo systemctl start check-disk.service   # Inicia el servicio inmediatamente.
+```
+
+#### **Verificar el estado del servicio**:
+
+```bash
+sudo systemctl status check-disk.service
+```
+
+Este comando te permitirá comprobar si el servicio está activo y funcionando correctamente.
+
+---
+
+### **4. Modificar el script para ejecución continua**
+
+Para garantizar que el script se ejecute de manera continua, se añadió un bucle infinito dentro del script `check-disk-space.sh`. De esta manera, el script ejecuta la comprobación de espacio en disco cada 5 minutos y no termina después de una sola ejecución.
+
+---
+
+### **5. Verificación de dependencias (cron)**
+
+Para probar que el servicio depende correctamente de `cron`, se detuvo el servicio `cron` y se verificó que el servicio `check-disk` no se ejecutara correctamente si `cron` no estaba activo.
+
+#### **Detener el servicio cron**:
+
+```bash
+sudo systemctl stop cron.service
+```
+
+#### **Verificar el estado del servicio `check-disk`**:
+
+```bash
+sudo systemctl status check-disk.service
+```
+
+Esto mostró que el servicio `check-disk` no podía ejecutarse correctamente sin `cron`, ya que `cron` es utilizado para enviar correos electrónicos si el espacio en disco supera el umbral.
+
+#### **Reiniciar el servicio cron**:
+
+```bash
+sudo systemctl start cron.service
+```
+
+Con `cron` en funcionamiento, el servicio `check-disk` volvió a funcionar correctamente.
+
+
+- **<span style="color:red">Ejercicio 4</span>**
+Reinicia la VM y mira si va bien el servicio.
+
+```bash
+[ (SI) root@core ~ ] sudo systemctl status check-disk.service
+● check-disk.service - Check Disk Space Service
+     Loaded: loaded (/etc/systemd/system/check-disk.service; enabled; vendor>
+     Active: active (running) since Wed 2025-04-09 13:27:35 CEST; 18s ago
+   Main PID: 442 (check-disk-spac)
+      Tasks: 2 (limit: 2304)
+     Memory: 3.1M
+        CPU: 71ms
+     CGroup: /system.slice/check-disk.service
+             ├─442 /bin/bash /usr/local/bin/check-disk-space.sh
+             └─457 sleep 300
+
+abr 09 13:27:35 core systemd[1]: Started Check Disk Space Service.
+lines 1-12/12 (END)
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Tema 7: Sistemas de Ficheros Avanzado
 
@@ -2584,6 +2781,398 @@ restore -r -f <backup_file>
 
 ## Practica 7
 
+**<span style="color:red">Ejercicio 1</span>**
+- Restaura el sistema a su estado inicial.
+- Añade **siete discos auxiliares de 512 MB cada uno** (`sdb`, `sdc`, `sdd`, `sde`, `sdf`, `sdg`, `sdh`) a la máquina virtual.
+- Inicia tu máquina virtual y **verifica que los siete discos han sido instalados correctamente**.
+
+Simplemente añadimos los discos a la maquina en la interfaz de VirtualBox. (En SATA).
+
+
+**<span style="color:red">Ejercicio 2</span>**
+Usando los discos **`sdb` y `sdc`**:
+
+a. Crear particiones y volumen lógico
+- Crea **dos particiones del mismo tamaño** en cada uno de los discos auxiliares (`sdb` y `sdc`), es decir, un total de **4 particiones**.
+- Crea un **volumen lógico** utilizando **3 de estas 4 particiones**.
+- Crea un sistema de archivos **ext4** utilizando el **100% del espacio disponible**.
+- Monta este sistema de archivos en un directorio y **verifica su estado** (por ejemplo, **copiando algunos archivos del sistema de archivos raíz en él**).
+
+Empezamos por crear las particiones como ya sabemos, con `gdisk`. (`gdisk dev/sdb`)
+
+``` bash
+n         # Nueva partición
+<Enter>   # Número por defecto
+<Enter>   # Primer sector (por defecto)
++256M     # Tamaño (dos particiones de 256MB = 512MB total)
+8e00      # Tipo LVM (Linux LVM)
+
+n         # Nueva partición 2
+<Enter>   # Número por defecto
+<Enter>   # Primer sector
+<Enter>   # Último sector (el resto del disco)
+8e00      # Tipo LVM
+
+w         # Guardar y salir
+y         # Confirmar
+```
+
+- PASO 2: Crear volúmenes físicos y grupo de volúmenes
+
+Inicializa las particiones como volúmenes físicos LVM:
+
+```bash
+sudo pvcreate /dev/sdb1 /dev/sdb2 /dev/sdc1
+```
+
+Crea un grupo de volúmenes llamado `vg_datos` con las tres particiones:
+
+```bash
+sudo vgcreate vg_datos /dev/sdb1 /dev/sdb2 /dev/sdc1
+```
+
+
+- PASO 3: Crear volumen lógico y sistema de archivos
+
+Crea un volumen lógico llamado `lv_datos` que utilice el 100% del espacio disponible en el grupo:
+
+```bash
+sudo lvcreate -l 100%FREE -n lv_datos vg_datos
+```
+
+Formatea el volumen lógico con el sistema de archivos ext4:
+
+```bash
+sudo mkfs.ext4 /dev/vg_datos/lv_datos
+```
+
+- PASO 4: Montar y verificar el volumen lógico
+
+Crea un directorio para montar el volumen:
+
+```bash
+sudo mkdir /mnt/lvmtest
+```
+
+Monta el volumen lógico en ese directorio:
+
+```bash
+sudo mount /dev/vg_datos/lv_datos /mnt/lvmtest
+```
+
+Copia archivos del sistema (por ejemplo, de `/etc`) como prueba:
+
+```bash
+sudo cp -r /etc/* /mnt/lvmtest/
+```
+
+Verifica que los archivos están copiados y el volumen está montado correctamente:
+
+```bash
+ls /mnt/lvmtest
+df -h /mnt/lvmtest
+```
+
+
+
+b. Añade la **4ª partición** al volumen lógico.
+- **Extiende el sistema de archivos** para que use todo el tamaño del volumen lógico.
+- **Verifica que el contenido copiado sigue estando disponible**.
+
+Añadir la cuarta partición (`/dev/sdc2`) al grupo de volúmenes:
+```bash
+sudo pvcreate /dev/sdc2       # Inicializa la partición como volumen físico LVM
+sudo vgextend vg_datos /dev/sdc2   # Añade la partición al grupo de volúmenes existente
+```
+
+Extender el volumen lógico para usar el nuevo espacio:
+```bash
+sudo lvextend -l +100%FREE /dev/vg_datos/lv_datos   # Amplía el volumen lógico con todo el espacio libre
+```
+
+Redimensionar el sistema de archivos ext4:
+```bash
+sudo resize2fs /dev/vg_datos/lv_datos   # Ajusta el sistema de archivos al nuevo tamaño del volumen lógico
+```
+
+Verificar que los archivos siguen allí:
+```bash
+ls /mnt/lvmtest                # Comprueba que el contenido sigue visible
+df -h /mnt/lvmtest             # Muestra el nuevo tamaño del volumen montado
+```
+
+**<span style="color:red">Ejercicio 3</span>**
+Usando los siguientes cuatro discos auxiliares (`sdd`, `sde`, `sdf`, `sdg`), **crea una partición en cada uno**.
+
+a. Crear RAID y montar en /var
+- Crea un sistema **RAID 5 con tres de los discos disponibles**.
+- Crea un sistema de archivos **ext4** sobre el RAID.
+- Hazlo accesible: **copia el contenido del directorio `/var`** en el sistema RAID.
+- **Monta el RAID de forma permanente** en `/var`.
+
+Crear particiones en los discos:
+
+```bash
+sudo gdisk /dev/sdd
+# Crear partición tipo RAID (fd00) y repetir para /dev/sde, /dev/sdf, /dev/sdg
+```
+
+Crear el RAID 5 con 3 discos + 1 de repuesto:
+
+```bash
+sudo mdadm --create --verbose /dev/md0 --level=5 --raid-devices=3 /dev/sdd1 /dev/sde1 /dev/sdf1 --spare-devices=1 /dev/sdg1
+```
+
+Verificar el estado del RAID:
+
+```bash
+cat /proc/mdstat
+```
+
+Crear sistema de archivos ext4 en el RAID:
+
+```bash
+sudo mkfs.ext4 /dev/md0
+```
+
+Copiar el contenido de `/var` al RAID:
+
+```bash
+sudo mkdir /mnt/raidvar
+sudo mount /dev/md0 /mnt/raidvar
+sudo rsync -aAXv /var/ /mnt/raidvar/
+```
+
+Montar RAID permanentemente en `/var`:
+
+```bash
+sudo mv /var /var_backup
+sudo mkdir /var
+sudo mount /dev/md0 /var
+```
+
+Obten el UUID del RAID:
+
+```bash
+sudo blkid /dev/md0
+```
+
+Edita `/etc/fstab`:
+
+```bash
+sudo nano /etc/fstab
+```
+
+Añade:
+
+```
+UUID=el_uuid_de_md0   /var   ext4   defaults   0   2
+```
+
+Verificar el montaje:
+
+```bash
+sudo mount -a
+df -h /var
+```
+
+b. Simular fallo y recuperar
+- Simula un fallo en uno de los discos del RAID (opción `-f`).
+- **Recupera la información perdida** usando el cuarto disco disponible.
+- **Verifica el proceso de recuperación** del sistema RAID.
+
+**Simular fallo en un disco del RAID (sdd1):**
+
+```bash
+sudo mdadm --fail /dev/md127 /dev/sdd1
+```
+
+**Salida esperada:**
+```
+mdadm: set /dev/sdd1 faulty in /dev/md127
+```
+
+**Verificar el estado del RAID tras el fallo:**
+
+```bash
+cat /proc/mdstat
+```
+
+**Salida esperada:**
+```
+Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0] [raid1] [raid10]
+md127 : active raid5 sdf1[4] sde1[1] sdd1[0](F) sdg1[3]
+      1041408 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/2] [_UU]
+      [===============>.....]  recovery = 79.2% (413244/520704) finish=0.0min speed=82648K/sec
+unused devices: <none>
+```
+
+- El disco `/dev/sdd1` está marcado como **faulty (F)**.
+- El RAID está en proceso de **recuperación** (79.2%).
+
+**Intentar añadir el disco de repuesto (sdg1):**
+
+```bash
+sudo mdadm --add /dev/md127 /dev/sdg1
+```
+
+**Salida esperada:**
+```
+mdadm: Cannot open /dev/sdg1: Device or resource busy
+```
+
+- Esto es esperado, ya que el disco `/dev/sdg1` está siendo utilizado automáticamente en el proceso de reconstrucción.
+
+**Verificar el proceso de reconstrucción del RAID:**
+
+```bash
+cat /proc/mdstat
+```
+
+**Salida esperada:**
+```
+Personalities : [raid6] [raid5] [raid4] [linear] [multipath] [raid0] [raid1] [raid10]
+md127 : active raid5 sdf1[4] sde1[1] sdd1[0](F) sdg1[3]
+      1041408 blocks super 1.2 level 5, 512k chunk, algorithm 2 [3/3] [UUU]
+unused devices: <none>
+```
+
+- La reconstrucción debería estar al **100%** y todos los discos estarán operativos.
+- El RAID está ahora en modo **construido** y **sin fallos**.
+
+**Verificar que los datos están intactos:**
+
+```bash
+df -h /var
+```
+
+**Salida esperada:**
+```
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/md127      1.0T  200G  800G  20% /var
+```
+
+```bash
+ls /var
+```
+
+**Salida esperada:**
+Deberías ver los archivos de tu directorio `/var` (como `log`, `lib`, etc.), sin cambios o pérdidas.
+
+
+**<span style="color:red">Ejercicio 4</span>**
+Como usuario `alumno`, accede a tu directorio personal y:
+
+a. Preparar entorno de backup
+- Crea dos archivos llamados `critical1.txt` y `critical2.txt`.
+- Añade contenido aleatorio a cada uno.
+- Usando el disco **`sdh`**:
+  - Crea **dos particiones del mismo tamaño**.
+  - Formatea ambas con **ext4**.
+  - Monta la primera partición en el directorio **`/home`** (de forma permanente).
+  - Monta la segunda partición en un directorio llamado **`/backups`** (también permanente).
+
+Comandos:
+
+```bash
+su - alumno                      # Cambiar a usuario alumno
+echo "data1" > ~/critical1.txt  # Crear archivo con contenido
+echo "data2" > ~/critical2.txt
+
+sudo gdisk /dev/sdh             # Crear 2 particiones iguales (sdh1 y sdh2, tipo 8300)
+
+sudo mkfs.ext4 /dev/sdh1        # Formatear primera partición
+sudo mkfs.ext4 /dev/sdh2        # Formatear segunda partición
+
+sudo mount /dev/sdh1 /mnt
+sudo rsync -av /home/ /mnt/     # Copiar contenido actual de /home a sdh1
+sudo umount /mnt
+
+sudo mount /dev/sdh1 /home      # Montar sdh1 en /home
+sudo mkdir /backups
+sudo mount /dev/sdh2 /backups   # Montar sdh2 en /backups
+
+sudo nano /etc/fstab            # Añadir líneas para montaje permanente:
+# /dev/sdh1  /home     ext4  defaults  0  2
+# /dev/sdh2  /backups  ext4  defaults  0  2
+```
+
+b. Realizar una copia de seguridad
+- Realiza una **copia de seguridad a nivel de sistema de archivos** del contenido de la partición montada en `/home`, guardando la copia en el directorio `/backups`.
+- La copia de seguridad debe estar diseñada para permitir **copias incrementales en el futuro**.
+- ¿Cómo o dónde puedes encontrar evidencia del proceso de copia de seguridad realizado por la herramienta `dump`?
+
+Claro, aquí tienes **los comandos clave para hacer backups con `dump`**, explicados de forma breve y clara:
+
+**Backup completo (nivel 0) y registrar la fecha**
+```bash
+sudo dump -0u -f /backups/home-lvl0.dump /home
+```
+- `-0`: Backup completo (nivel 0).
+- `-u`: Actualiza el archivo de fechas (`/var/lib/dumpdates`).
+- `-f`: Archivo donde se guarda el backup (`/backups/home-lvl0.dump`).
+- `/home`: Sistema de archivos origen del backup.
+
+**Ver registro de backups realizados**
+```bash
+cat /var/lib/dumpdates
+```
+- Muestra las fechas y niveles de backup realizados por `dump`.
+
+**Backup incremental (nivel 1)**
+```bash
+sudo dump -1u -f /backups/home-lvl1.dump /home
+```
+- `-1`: Solo guarda los archivos modificados desde el último backup nivel 0 o 1.
+- `-u`: También registra la fecha de este backup incremental.
+- `-f`: Ruta del archivo destino (`/backups/home-lvl1.dump`).
+
+
+c. Verificar backup e incrementar
+- Como usuario `alumno`, crea un nuevo directorio en tu `$HOME` y un nuevo archivo dentro de ese directorio.
+- **Reinicia el sistema**.
+- Realiza una **copia de seguridad incremental de nivel 1** y verifica que ha sido registrada.
+- **Verifica el contenido** de ambas copias de seguridad.
+- **Elimina el archivo `critical1.txt`** y trata de **recuperar su contenido desde la copia de seguridad realizada**.
+
+Resumen de comandos:
+
+1. **Accede al directorio adecuado**:
+   ```bash
+   cd /home/alumno
+   ```
+
+2. **Restaurar el backup de nivel 0**:
+   ```bash
+   sudo restore -r -f /backups/home-lvl0.dump
+   ```
+
+3. **Restaurar el backup de nivel 1 (incremental)**:
+   ```bash
+   sudo restore -r -f /backups/home-lvl1.dump
+   ```
+
+4. **Verificar que los archivos están restaurados**:
+   ```bash
+   ls /home/alumno
+   ```
+
+5. **Eliminar un archivo y restaurarlo**:
+   ```bash
+   rm /home/alumno/critical1.txt
+   sudo restore -i -f /backups/home-lvl0.dump
+   ```
+
+Aclaraciones:
+
+- **El comando `restore`** debe ejecutarse en el directorio donde deseas que los archivos sean restaurados. Si restauras los archivos desde `/tmp` o cualquier otro directorio, luego tendrás que moverlos al directorio de destino (`/home/alumno`) con `sudo mv`.
+
+- **Uso de `restore -i`**: Este comando interactivo te permite seleccionar específicamente qué archivos restaurar. Se pueden usar comandos como `add` para añadir archivos al listado de restauración, y `extract` para restaurarlos.
+
+Nota sobre el funcionamiento de `restore`:
+- **El comando `restore`** siempre escribe los archivos restaurados en el directorio donde te encuentras cuando ejecutas el comando. Si deseas restaurar en un directorio específico (por ejemplo, `/home/alumno`), asegúrate de estar ubicado en ese directorio o usa `cd` para cambiar de directorio antes de restaurar. También puedes restaurar a otro lugar y mover los archivos después.
+
+
 # Tema 8: Recursos y Eventos
 
 ## Introducción: Rendimiento del Sistema
@@ -2763,5 +3352,3 @@ Los temporizadores de `systemd` pueden ser una alternativa a `cron` y permiten l
     - Sintaxis de directivas: `$Directive valor`
     - Sintaxis de reglas: `facility.severity action`
 
-
-## Practica 8
