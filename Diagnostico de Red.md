@@ -1,7 +1,3 @@
-Claro, aquí tienes el protocolo en formato de informe limpio, sin emojis ni adornos, listo para usarse como guía práctica o para convertirlo a Markdown.
-
----
-
 # Protocolo de Diagnóstico de Problemas de Red en Linux
 
 **Asignatura:** Administración de Sistemas
