@@ -3102,7 +3102,6 @@ b. Realizar una copia de seguridad
 - La copia de seguridad debe estar diseñada para permitir **copias incrementales en el futuro**.
 - ¿Cómo o dónde puedes encontrar evidencia del proceso de copia de seguridad realizado por la herramienta `dump`?
 
-Claro, aquí tienes **los comandos clave para hacer backups con `dump`**, explicados de forma breve y clara:
 
 **Backup completo (nivel 0) y registrar la fecha**
 ```bash
